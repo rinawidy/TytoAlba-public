@@ -53,3 +53,8 @@ coverage.txt
 diagrams/
 wireframe/
 wireframes/
+
+# Session and personal notes (exclude from repo)
+SESSION_SUMMARY*.md
+TODO*NUMBERED*.md
+PROJECT_CONTINUATION_PLAN.md
