@@ -4,34 +4,74 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
 venv/
 ENV/
-build/
-dist/
-*.egg-info/
-
-# Environment variables
-.env
-
-# Model files (large binary files)
-models/*.pkl
-models/*.joblib
-
-# Data files
-data/*.csv
-data/*.json
+env/
+.venv
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
-.DS_Store
-Thumbs.db
+# Environment variables
+.env
+
+# Models
+models/*.h5
+models/*.pkl
+models/*.pth
+models/*.ckpt
+!models/.gitkeep
+
+# Data
+data/*.csv
+data/*.json
+data/*.parquet
+!data/.gitkeep
 
 # Logs
-logs/
 *.log
+logs/
+
+# Training outputs
+*.png
+*.jpg
+*.pdf
+training_history/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# MacOS
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

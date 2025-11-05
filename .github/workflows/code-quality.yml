@@ -1,0 +1,186 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  cyclomatic-complexity:
+    name: Cyclomatic Complexity Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Go Cyclomatic Complexity Analysis
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Install gocyclo
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Run gocyclo on backend
+        run: |
+          echo "=== Go Cyclomatic Complexity Analysis ==="
+          echo ""
+          echo "Analyzing backend code..."
+
+          # Run gocyclo and capture output
+          gocyclo -over 0 ./backend > gocyclo_report.txt || true
+
+          # Display full report
+          cat gocyclo_report.txt
+
+          # Check for critical complexity (CC >= 15)
+          CRITICAL=$(gocyclo -over 14 ./backend | wc -l)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo ""
+            echo "❌ FAILED: Found $CRITICAL function(s) with cyclomatic complexity >= 15"
+            echo "Critical complexity functions:"
+            gocyclo -over 14 ./backend
+            exit 1
+          fi
+
+          # Check for high complexity (CC >= 10)
+          HIGH=$(gocyclo -over 9 ./backend | wc -l)
+          if [ "$HIGH" -gt 0 ]; then
+            echo ""
+            echo "⚠️  WARNING: Found $HIGH function(s) with cyclomatic complexity >= 10"
+            echo "Consider refactoring these functions:"
+            gocyclo -over 9 ./backend
+            echo ""
+            echo "This is a warning only. Build will continue."
+          else
+            echo ""
+            echo "✅ All Go functions have cyclomatic complexity < 10"
+          fi
+
+      # Python Cyclomatic Complexity Analysis
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install radon
+        run: pip install radon
+
+      - name: Run radon on ML service
+        run: |
+          echo ""
+          echo "=== Python Cyclomatic Complexity Analysis ==="
+          echo ""
+          echo "Analyzing ml-service code..."
+
+          # Run radon and show results
+          radon cc ml-service/src -a -s > radon_report.txt || true
+          cat radon_report.txt
+
+          # Check for critical complexity (CC >= 15, grade F)
+          CRITICAL=$(radon cc ml-service/src -n F -s | grep -E "^\s+[MFC]" | wc -l)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo ""
+            echo "❌ FAILED: Found functions with cyclomatic complexity >= 15 (Grade F)"
+            echo "Critical complexity functions:"
+            radon cc ml-service/src -n F -s
+            exit 1
+          fi
+
+          # Check for high complexity (CC >= 10, grades C, D, E, F)
+          HIGH=$(radon cc ml-service/src -n C -s | grep -E "^\s+[MCDEF]" | wc -l)
+          if [ "$HIGH" -gt 0 ]; then
+            echo ""
+            echo "⚠️  WARNING: Found functions with cyclomatic complexity >= 10 (Grade C or lower)"
+            echo "Consider refactoring these functions:"
+            radon cc ml-service/src -n C -s
+            echo ""
+            echo "This is a warning only. Build will continue."
+          else
+            echo ""
+            echo "✅ All Python functions have cyclomatic complexity < 10"
+          fi
+
+      # Generate summary report
+      - name: Generate summary
+        if: always()
+        run: |
+          echo ""
+          echo "=== Code Quality Summary ==="
+          echo ""
+          echo "📊 Complexity Thresholds:"
+          echo "  - ⚠️  Warning: CC >= 10"
+          echo "  - ❌ Fail: CC >= 15"
+          echo ""
+          echo "📁 Analysis Scope:"
+          echo "  - Go backend: ./backend"
+          echo "  - Python ML service: ./ml-service/src"
+          echo ""
+          echo "📖 Standards Reference:"
+          echo "  - NASA: CC <= 10 (recommended)"
+          echo "  - ISO 26262: CC <= 15 (maximum)"
+          echo "  - TytoAlba Target: CC <= 5 (ideal)"
+          echo ""
+          echo "For detailed reports, check the logs above."
+
+      # Upload reports as artifacts
+      - name: Upload complexity reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: complexity-reports
+          path: |
+            gocyclo_report.txt
+            radon_report.txt
+          retention-days: 30
+
+  code-style:
+    name: Code Style Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Go formatting check
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Check Go formatting
+        run: |
+          echo "=== Go Code Style Check ==="
+          UNFORMATTED=$(gofmt -l ./backend)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "❌ The following files are not properly formatted:"
+            echo "$UNFORMATTED"
+            echo ""
+            echo "Run 'gofmt -w ./backend' to fix formatting."
+            exit 1
+          fi
+          echo "✅ All Go files are properly formatted"
+
+      # Python style check with flake8
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Check Python style
+        run: |
+          echo ""
+          echo "=== Python Code Style Check ==="
+          # Allow line length up to 120 characters, ignore some common warnings
+          flake8 ml-service/src --max-line-length=120 --extend-ignore=E203,W503 || {
+            echo "❌ Python style issues found"
+            echo "Fix issues or update .flake8 config"
+            exit 1
+          }
+          echo "✅ Python code follows PEP 8 style guide"

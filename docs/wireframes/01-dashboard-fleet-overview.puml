@@ -1,0 +1,81 @@
+@startuml Dashboard-Fleet-Overview
+!theme plain
+scale 1.5
+
+title TytoAlba - Dashboard / Fleet Overview (Desktop)
+
+salt
+{+
+  {* TytoAlba - Fleet Management System | [Profile v] | [Notifications (3)] | [Logout] }
+  {
+    {T
+      + <b>Dashboard</b>
+      + Ships
+      + Reports
+      + Analytics
+      + Settings
+      --
+      + Admin Panel
+    } |
+    {
+      {
+        == Fleet Overview - Live Map
+        .
+        {^
+          "┌────────────────────────────────────────────────────────────────────────┐"
+          "│                                                                        │"
+          "│     [ INDONESIA MAP - Leaflet.js ]                                     │"
+          "│                                                                        │"
+          "│         🚢 Rasuna Baruna (Ship #1)                                     │"
+          "│         ════════> (solid green line - traversed)                       │"
+          "│         ········> (dotted gray line - remaining)                       │"
+          "│                                                                        │"
+          "│         🚢 Latifah Baruna (Ship #2)                                    │"
+          "│                                                                        │"
+          "│         🚢 Meutia Baruna (Ship #3)                                     │"
+          "│                                                                        │"
+          "│                        📍 Ports:                                       │"
+          "│                        • Jepara                                        │"
+          "│                        • Taboneo                                       │"
+          "│                        • Labuan Bajo                                   │"
+          "│                        • Makassar                                      │"
+          "│                                                                        │"
+          "│   [ Zoom In ] [ Zoom Out ] [ Reset View ] [ Full Screen ]             │"
+          "└────────────────────────────────────────────────────────────────────────┘"
+        }
+      }
+      --
+      {
+        == Quick Stats
+        {
+          [ 🚢 <b>12</b> Total Ships ] | [ ⛵ <b>9</b> In Transit ] | [ ⚓ <b>3</b> In Port ] | [ ⚠ <b>1</b> Delayed ]
+        }
+      }
+      --
+      {
+        == Active Alerts
+        {#
+          <b>Type</b> | <b>Ship</b> | <b>Message</b> | <b>Time</b> | <b>Action</b>
+          ⚠ Low Fuel | Martha Baruna | Fuel level below 15% (7,500L remaining) | 2 min ago | [View] [Dismiss]
+          ℹ Route Update | Rasuna Baruna | Weather advisory - slight delay expected | 15 min ago | [View] [Dismiss]
+        }
+      }
+      --
+      {
+        == Fleet Status Table
+        {SI
+          <b>No</b> | <b>Ship Name</b> | <b>Status</b> | <b>Current Location</b> | <b>Destination</b> | <b>ETA</b> | <b>Fuel</b> | <b>Actions</b>
+          1 | Rasuna Baruna | <color:blue>● In Transit</color> | -5.5°, 112.5° | Taboneo Port | 24h 30m | 68% (12,500L) | [View] [Track]
+          2 | Latifah Baruna | <color:blue>● In Transit</color> | -4.0°, 118.0° | Labuan Bajo | 36h 15m | 58% (11,800L) | [View] [Track]
+          3 | Martha Baruna | <color:green>● In Port</color> | Jepara Port | - | Docked | 92% (18,500L) | [View] [Track]
+          4 | Meutia Baruna | <color:blue>● In Transit</color> | -1.5°, 117.5° | Makassar Port | 48h 00m | 45% (9,500L) | [View] [Track]
+          5 | Devi Baruna | <color:red>● Delayed</color> | -3.2°, 115.8° | Surabaya Port | 52h 30m | 38% (8,200L) | [View] [Track]
+        }
+      }
+    }
+  }
+  {
+    <i>Last updated: 2024-10-21 14:32:15 WIB</i> | [Refresh Data]
+  }
+}
+@enduml

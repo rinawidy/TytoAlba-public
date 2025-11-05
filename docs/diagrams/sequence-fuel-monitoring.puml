@@ -1,0 +1,204 @@
+@startuml Sequence-Fuel-Monitoring
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Sequence Diagram - Real-time Fuel Monitoring & Consumption Tracking
+
+actor "Ship Captain" as Captain
+participant "Fuel Sensor\n(IoT Device)" as Sensor
+participant "Edge Gateway\n(MQTT Client)" as Gateway
+participant "MQTT Broker\n(Mosquitto)" as Broker
+participant "Data Processor\n(Python Worker)" as Processor
+database "PostgreSQL\n(TimescaleDB)" as DB
+participant "Backend API\n(Go)" as Backend
+participant "Web Frontend\n(Vue.js)" as Frontend
+participant "Alert Service" as AlertService
+
+autonumber
+
+== Automated Sensor Reading (Every 5 minutes) ==
+
+Sensor -> Sensor: Measure fuel level\n(ultrasonic sensor)
+activate Sensor
+Sensor -> Sensor: Read sensor value\n(voltage → liters conversion)
+Sensor -> Gateway: Send fuel reading\n{level: 12500L, tank_id: 1}\nvia Serial/Modbus
+deactivate Sensor
+activate Gateway
+
+Gateway -> Gateway: Add metadata:\n- timestamp: ISO8601\n- ship_id: 123\n- sensor_health: OK
+Gateway -> Gateway: Buffer data locally\n(retry queue for connectivity loss)
+
+Gateway -> Broker: PUBLISH\nTopic: "ship/123/fuel"\nPayload: {\n  shipId: 123,\n  timestamp: "2024-10-21T10:00:00Z",\n  fuelLevel: 12500,\n  tankId: 1,\n  sensorHealth: "OK"\n}
+activate Broker
+deactivate Gateway
+
+== Data Processing & Validation ==
+
+Broker -> Processor: SUBSCRIBE "ship/+/fuel"\n(receives message)
+activate Processor
+
+Processor -> Processor: Validate message schema\n(JSON schema validation)
+
+alt Valid Data
+    Processor -> Processor: Data quality checks:\n- Range: 0 ≤ fuel ≤ 50000L\n- Timestamp recent (< 10 min)\n- Sensor health = OK
+
+    Processor -> DB: INSERT INTO fuel_readings\n(ship_id, timestamp, fuel_level,\nsource='SENSOR', validated=true)
+    activate DB
+    DB --> Processor: Insert successful (ID: 789)
+    deactivate DB
+
+    Processor -> Processor: Calculate consumption rate:\ncurrent - previous reading
+
+    Processor -> DB: UPDATE ship_status\nSET current_fuel = 12500,\nlast_update = now()
+    activate DB
+    DB --> Processor: Update successful
+    deactivate DB
+
+    == Threshold Alert Check ==
+
+    Processor -> Processor: Check alert thresholds:\nIF fuel < 10000L THEN alert
+
+    alt Fuel Below Threshold
+        Processor -> AlertService: Trigger low fuel alert\n{shipId: 123, fuel: 8500L}
+        activate AlertService
+        AlertService -> AlertService: Create alert record
+        AlertService -> DB: INSERT INTO alerts
+        activate DB
+        DB --> AlertService: Alert created
+        deactivate DB
+        AlertService -> Backend: WebSocket notification
+        activate Backend
+        Backend -> Frontend: Push notification\n"Low fuel alert: Ship 123"
+        activate Frontend
+        Frontend -> Frontend: Show alert banner
+        Frontend --> Captain: Display alert on dashboard
+        deactivate Frontend
+        deactivate Backend
+        deactivate AlertService
+    end
+
+else Invalid Data
+    Processor -> Processor: Log validation error
+    Processor -> DB: INSERT INTO invalid_data_log\n(source, reason, payload)
+    activate DB
+    DB --> Processor: Logged
+    deactivate DB
+    Processor -> AlertService: Notify admin of data issue
+end
+
+deactivate Processor
+deactivate Broker
+
+== Captain Views Real-time Dashboard ==
+
+Captain -> Frontend: Open dashboard\n(page load or auto-refresh)
+activate Frontend
+
+Frontend -> Backend: GET /api/ships/123/fuel/realtime
+activate Backend
+
+Backend -> DB: SELECT current_fuel,\nlast_update FROM ship_status\nWHERE ship_id = 123
+activate DB
+DB --> Backend: {fuel: 12500L, updated: "2s ago"}
+deactivate DB
+
+Backend --> Frontend: HTTP 200 OK\n{currentFuel: 12500, status: "OK"}
+deactivate Backend
+
+Frontend -> Frontend: Update fuel gauge visualization\n(animated needle to 12500L)
+Frontend -> Frontend: Display status: "Normal"
+Frontend --> Captain: Show real-time fuel level
+deactivate Frontend
+
+== Captain Requests Fuel Consumption History ==
+
+Captain -> Frontend: Click "View Fuel History"\n(last 7 days)
+activate Frontend
+
+Frontend -> Backend: GET /api/ships/123/fuel/history?days=7
+activate Backend
+
+Backend -> DB: SELECT timestamp, fuel_level\nFROM fuel_readings\nWHERE ship_id = 123\n  AND timestamp > now() - interval '7 days'\nORDER BY timestamp ASC
+activate DB
+DB --> Backend: Time-series data:\n[{timestamp, fuelLevel}...] (2016 records)
+deactivate DB
+
+Backend -> Backend: Calculate consumption metrics:\n- Total consumed: 5000L\n- Avg per day: 714L\n- Consumption rate: 29.75 L/hour
+
+Backend --> Frontend: HTTP 200 OK\n{\n  history: [...],\n  totalConsumed: 5000,\n  avgPerDay: 714,\n  consumptionRate: 29.75\n}
+deactivate Backend
+
+Frontend -> Frontend: Render line chart\n(Time vs Fuel Level)
+Frontend -> Frontend: Display statistics panel
+Frontend --> Captain: Show fuel consumption trends
+deactivate Frontend
+
+== Manual Fuel Reading Entry (Fallback) ==
+
+note over Captain, Sensor
+  **Scenario:** Sensor malfunction detected
+end note
+
+Captain -> Frontend: Click "Manual Fuel Entry"\n(sensor offline)
+activate Frontend
+
+Frontend -> Frontend: Show manual entry form
+Captain -> Frontend: Enter fuel level: 11800L\nSelect tank: Tank 1
+
+Frontend -> Backend: POST /api/ships/123/fuel/manual\n{\n  fuelLevel: 11800,\n  tankId: 1,\n  enteredBy: "captain_user_id",\n  notes: "Sensor malfunction"\n}
+activate Backend
+
+Backend -> Backend: Validate user permissions\n(captain authorized for this ship)
+
+Backend -> DB: INSERT INTO fuel_readings\n(ship_id, timestamp, fuel_level,\nsource='MANUAL', entered_by='...')
+activate DB
+DB --> Backend: Insert successful
+deactivate DB
+
+Backend -> DB: UPDATE ship_status\nSET current_fuel = 11800,\nlast_manual_reading = now()
+activate DB
+DB --> Backend: Update successful
+deactivate DB
+
+Backend --> Frontend: HTTP 201 Created\n{message: "Manual reading saved"}
+deactivate Backend
+
+Frontend -> Frontend: Show success notification
+Frontend -> Frontend: Refresh fuel gauge
+Frontend --> Captain: Confirm manual entry saved
+deactivate Frontend
+
+== Predictive Fuel Consumption Analysis ==
+
+note over Backend, DB
+  **Background Task (Hourly):**
+  Processor analyzes fuel consumption patterns
+  and predicts when refueling will be needed
+end note
+
+Processor -> DB: SELECT fuel consumption history\n+ voyage plan data
+activate Processor
+activate DB
+DB --> Processor: Historical data
+deactivate DB
+
+Processor -> Processor: Calculate trend:\nLinear regression on consumption
+Processor -> Processor: Predict fuel depletion:\nIF current_rate continues,\nfuel = 0 at 2024-10-25
+
+alt Predicted Depletion Before Arrival
+    Processor -> AlertService: Create warning:\n"Refuel needed before Taboneo"
+    activate AlertService
+    AlertService -> Backend: Send alert
+    activate Backend
+    Backend -> Frontend: WebSocket notification
+    activate Frontend
+    Frontend --> Captain: Display refuel warning
+    deactivate Frontend
+    deactivate Backend
+    deactivate AlertService
+end
+
+deactivate Processor
+
+@enduml

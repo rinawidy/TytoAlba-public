@@ -1,0 +1,20 @@
+{
+  "name": "tytoalba",
+  "version": "1.0.0",
+  "description": "Ship tracking and fuel consumption prediction system.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.39.0",
+    "eslint-plugin-complexity": "^1.0.2"
+  }
+}

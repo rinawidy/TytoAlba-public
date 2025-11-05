@@ -1,0 +1,31 @@
+No	Armada 	Type
+1	MV. Adhiguna Tarahan	Bulk Carier
+2	MV. Meutia Baruna	Bulk Carier
+3	MV. Latifah Baruna	Bulk Carier
+4	Srikandi Baruna 2401	tugboat
+	Baruna Power 3301	Berge
+5	Srikandi Baruna 2203	tugboat
+	Baruna Power 3006	Berge
+6	Srikandi Baruna 2201	tugboat
+	Baruna Power 3004	Berge
+7	Srikandi Baruna 2202	tugboat
+	Baruna Power 3005	Berge
+8	MV. Kartini Baruna	Bulk Carier
+9	Srikandi Baruna 2402	tugboat
+	Baruna Power 3302	Berge
+10	Srikandi Baruna 2001	tugboat
+	Baruna Power 3001	Berge
+11	Srikandi Baruna 2002	tugboat
+	Baruna Power 3003	Berge
+12	MV. Sartika Baruna	Bulk Carier
+13	MV. Arimbi Baruna	Bulk Carier
+14	MV. Intan Baruna	Bulk Carier
+15	MV. Rasuna Baruna	Bulk Carier
+16	MV. Malahayati Baruna	Bulk Carier
+17	MV. Martha Baruna	Bulk Carier
+18	Srikandi Baruna 2204	tugboat
+	Baruna Power  3303	Berge
+19	Srikandi Baruna 2204	tugboat
+	Baruna Power  3304	Berge
+20	MV. Kencana Baruna	Bulk Carier
+21	MV. Zalecha Baruna	Bulk Carier

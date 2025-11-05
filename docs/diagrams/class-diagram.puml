@@ -1,0 +1,464 @@
+@startuml ClassDiagram-TytoAlba
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title Class Diagram - TytoAlba Domain Model
+
+' ====================
+' Core Domain Entities
+' ====================
+
+class Ship {
+  - id: UUID
+  - mmsi: String
+  - name: String
+  - vesselType: VesselType
+  - tonnage: Float
+  - length: Float
+  - draft: Float
+  - maxSpeed: Float
+  - fuelCapacity: Float
+  - currentLocation: GeoPoint
+  - currentSpeed: Float
+  - currentCourse: Float
+  - status: ShipStatus
+  - lastUpdated: DateTime
+  --
+  + updateLocation(location: GeoPoint): void
+  + getCurrentFuelLevel(): Float
+  + getActiveVoyage(): Voyage
+  + calculateDistanceToDestination(): Float
+  + isMoving(): Boolean
+}
+
+class GeoPoint {
+  - latitude: Float
+  - longitude: Float
+  - altitude: Float
+  - timestamp: DateTime
+  --
+  + distanceTo(other: GeoPoint): Float
+  + bearingTo(other: GeoPoint): Float
+  + toGeoJSON(): String
+  + validate(): Boolean
+}
+
+enum ShipStatus {
+  IN_PROGRESS
+  IN_PORT
+  DELAYED
+  ANCHORED
+  MAINTENANCE
+}
+
+enum VesselType {
+  BULK_CARRIER
+  CONTAINER_SHIP
+  TANKER
+  GENERAL_CARGO
+}
+
+class Port {
+  - id: UUID
+  - name: String
+  - location: GeoPoint
+  - country: String
+  - unlocode: String
+  - approachComplexity: Integer
+  - averageWaitTime: Float
+  - berthingCapacity: Integer
+  --
+  + getActiveVessels(): List<Ship>
+  + calculateCongestion(): Float
+}
+
+' ====================
+' Voyage & Route
+' ====================
+
+class Voyage {
+  - id: UUID
+  - ship: Ship
+  - origin: Port
+  - destination: Port
+  - route: Route
+  - departureTime: DateTime
+  - plannedArrivalTime: DateTime
+  - actualArrivalTime: DateTime
+  - status: VoyageStatus
+  - cargoWeight: Float
+  --
+  + getCurrentProgress(): Float
+  + getEstimatedTimeRemaining(): Float
+  + isDelayed(): Boolean
+  + updateRoute(newRoute: Route): void
+}
+
+enum VoyageStatus {
+  PLANNED
+  IN_TRANSIT
+  ARRIVED
+  CANCELLED
+}
+
+class Route {
+  - id: UUID
+  - waypoints: List<Waypoint>
+  - totalDistance: Float
+  - estimatedDuration: Float
+  - createdAt: DateTime
+  --
+  + addWaypoint(waypoint: Waypoint): void
+  + removeWaypoint(index: Integer): void
+  + optimizeRoute(): void
+  + calculateTotalDistance(): Float
+  + getTraversedSegment(currentIndex: Integer): List<Waypoint>
+  + getRemainingSegment(currentIndex: Integer): List<Waypoint>
+}
+
+class Waypoint {
+  - id: UUID
+  - location: GeoPoint
+  - sequenceNumber: Integer
+  - estimatedArrivalTime: DateTime
+  - actualArrivalTime: DateTime
+  - notes: String
+  --
+  + isPassed(): Boolean
+  + getDistanceToNext(): Float
+}
+
+' ====================
+' Fuel Management
+' ====================
+
+class FuelReading {
+  - id: UUID
+  - ship: Ship
+  - timestamp: DateTime
+  - fuelLevel: Float
+  - tankId: Integer
+  - source: ReadingSource
+  - enteredBy: User
+  - sensorHealth: SensorHealth
+  - validated: Boolean
+  - notes: String
+  --
+  + validate(): Boolean
+  + calculateConsumptionSince(previous: FuelReading): Float
+  + isAnomaly(): Boolean
+}
+
+enum ReadingSource {
+  SENSOR
+  MANUAL
+  CALCULATED
+}
+
+enum SensorHealth {
+  OK
+  DEGRADED
+  FAILED
+  CALIBRATION_NEEDED
+}
+
+class FuelTank {
+  - id: UUID
+  - ship: Ship
+  - tankNumber: Integer
+  - capacity: Float
+  - currentLevel: Float
+  - sensorId: String
+  - lastCalibration: DateTime
+  --
+  + getLatestReading(): FuelReading
+  + getFillPercentage(): Float
+  + needsCalibration(): Boolean
+}
+
+class FuelConsumptionReport {
+  - id: UUID
+  - ship: Ship
+  - startDate: DateTime
+  - endDate: DateTime
+  - totalConsumed: Float
+  - averageConsumptionRate: Float
+  - distanceTraveled: Float
+  - fuelEfficiency: Float
+  - generatedAt: DateTime
+  --
+  + calculateMetrics(): void
+  + exportToPDF(): File
+  + exportToExcel(): File
+}
+
+' ====================
+' Predictions
+' ====================
+
+class Prediction {
+  - id: UUID
+  - ship: Ship
+  - predictionType: PredictionType
+  - createdAt: DateTime
+  - predictedValue: Float
+  - confidenceScore: Float
+  - confidenceInterval: ConfidenceInterval
+  - modelVersion: String
+  - inputFeatures: JSON
+  - actualValue: Float
+  - accuracy: Float
+  --
+  + calculateAccuracy(): Float
+  + getConfidenceLevel(): String
+  + isAccurate(threshold: Float): Boolean
+}
+
+enum PredictionType {
+  ETA
+  FUEL_ON_ARRIVAL
+  FUEL_CONSUMPTION_RATE
+  ARRIVAL_DELAY
+}
+
+class ConfidenceInterval {
+  - lowerBound: Float
+  - upperBound: Float
+  - confidenceLevel: Float
+  --
+  + contains(value: Float): Boolean
+  + getWidth(): Float
+}
+
+class ETAPrediction {
+  - predictedETA: DateTime
+  - predictedFuelOnArrival: Float
+  - weatherConditions: List<WeatherForecast>
+  - trafficDensity: Float
+  --
+  + getTimeToArrival(): Duration
+  + getFuelRequired(): Float
+  + getDelayRisk(): Float
+}
+
+class ModelPerformance {
+  - id: UUID
+  - modelVersion: String
+  - evaluationDate: DateTime
+  - mae: Float
+  - rmse: Float
+  - mape: Float
+  - r2Score: Float
+  - sampleSize: Integer
+  --
+  + isPerformingWell(): Boolean
+  + needsRetraining(): Boolean
+}
+
+' ====================
+' Weather Data
+' ====================
+
+class WeatherForecast {
+  - id: UUID
+  - location: GeoPoint
+  - timestamp: DateTime
+  - temperature: Float
+  - windSpeed: Float
+  - windDirection: Float
+  - waveHeight: Float
+  - seaCurrentSpeed: Float
+  - seaCurrentDirection: Float
+  - visibility: Float
+  - weatherCondition: String
+  --
+  + isHazardous(): Boolean
+  + getBeaufortScale(): Integer
+}
+
+' ====================
+' IoT & Sensors
+' ====================
+
+class Sensor {
+  - id: UUID
+  - sensorId: String
+  - ship: Ship
+  - sensorType: SensorType
+  - manufacturer: String
+  - installDate: DateTime
+  - lastCalibration: DateTime
+  - status: SensorHealth
+  - firmware: String
+  --
+  + calibrate(): void
+  + getHealthStatus(): SensorHealth
+  + sendData(data: Object): void
+}
+
+enum SensorType {
+  FUEL_LEVEL
+  GPS
+  TEMPERATURE
+  SPEED_LOG
+  GYROCOMPASS
+}
+
+class MQTTMessage {
+  - id: UUID
+  - topic: String
+  - payload: JSON
+  - timestamp: DateTime
+  - qos: Integer
+  - retained: Boolean
+  - clientId: String
+  --
+  + validate(): Boolean
+  + parse(): Object
+}
+
+' ====================
+' User Management
+' ====================
+
+class User {
+  - id: UUID
+  - username: String
+  - email: String
+  - passwordHash: String
+  - role: UserRole
+  - ship: Ship
+  - active: Boolean
+  - lastLogin: DateTime
+  --
+  + authenticate(password: String): Boolean
+  + hasPermission(permission: String): Boolean
+  + changePassword(newPassword: String): void
+}
+
+enum UserRole {
+  CAPTAIN
+  FLEET_MANAGER
+  ADMINISTRATOR
+  VIEWER
+}
+
+class Alert {
+  - id: UUID
+  - ship: Ship
+  - alertType: AlertType
+  - severity: Severity
+  - message: String
+  - createdAt: DateTime
+  - acknowledgedAt: DateTime
+  - acknowledgedBy: User
+  - resolved: Boolean
+  --
+  + acknowledge(user: User): void
+  + resolve(): void
+  + notify(users: List<User>): void
+}
+
+enum AlertType {
+  LOW_FUEL
+  SENSOR_FAILURE
+  DELAYED_ARRIVAL
+  ROUTE_DEVIATION
+  WEATHER_WARNING
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+' ====================
+' Relationships
+' ====================
+
+Ship "1" -- "0..*" FuelTank : has
+Ship "1" -- "0..*" Sensor : equipped with
+Ship "1" -- "0..*" FuelReading : generates
+Ship "1" -- "0..*" Voyage : participates in
+Ship "1" -- "0..*" Prediction : has
+Ship "1" -- "1" GeoPoint : current location
+Ship "1" -- "1" ShipStatus : has
+Ship "1" -- "1" VesselType : classified as
+Ship "1" -- "0..*" Alert : triggers
+
+Voyage "1" -- "1" Ship : involves
+Voyage "1" -- "1" Port : departs from >
+Voyage "1" -- "1" Port : arrives at >
+Voyage "1" -- "1" Route : follows
+Voyage "1" -- "1" VoyageStatus : has
+
+Route "1" -- "2..*" Waypoint : contains
+Waypoint "1" -- "1" GeoPoint : located at
+
+FuelReading "1" -- "1" Ship : measured for
+FuelReading "1" -- "1" ReadingSource : from
+FuelReading "1" -- "0..1" User : entered by
+FuelReading "1" -- "1" SensorHealth : health status
+
+FuelTank "1" -- "0..*" FuelReading : produces
+FuelTank "1" -- "1" Sensor : monitored by
+
+Prediction "1" -- "1" Ship : for
+Prediction "1" -- "1" PredictionType : type
+Prediction "1" -- "1" ConfidenceInterval : has
+
+ETAPrediction "1" --|> Prediction : extends
+ETAPrediction "1" -- "0..*" WeatherForecast : considers
+
+WeatherForecast "1" -- "1" GeoPoint : at location
+
+Sensor "1" -- "1" SensorType : type
+Sensor "1" -- "1" SensorHealth : status
+
+User "1" -- "1" UserRole : has
+User "0..1" -- "0..1" Ship : assigned to
+
+Alert "1" -- "1" Ship : about
+Alert "1" -- "1" AlertType : type
+Alert "1" -- "1" Severity : severity
+Alert "0..1" -- "0..1" User : acknowledged by
+
+FuelConsumptionReport "1" -- "1" Ship : for
+
+Port "1" -- "1" GeoPoint : located at
+
+MQTTMessage "1" -- "1" Sensor : published by
+
+ModelPerformance "1" -- "0..*" Prediction : evaluates
+
+note right of Ship
+  Central entity representing
+  a vessel in the fleet.
+  Tracks real-time location,
+  fuel, and voyage status.
+end note
+
+note right of Prediction
+  Stores ML model predictions
+  with confidence scores.
+  Used for accuracy tracking
+  and model improvement.
+end note
+
+note right of FuelReading
+  Time-series data from sensors
+  or manual entry. Stored in
+  TimescaleDB for efficient
+  time-based queries.
+end note
+
+note right of Route
+  Waypoint sequence defining
+  ship's planned path.
+  Supports traversed/remaining
+  segment visualization.
+end note
+
+@enduml

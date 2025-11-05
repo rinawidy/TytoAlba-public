@@ -5,7 +5,7 @@ FastAPI Application for ML Service
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+from dotenv import load_dot env
 
 from src.models.fuel_predictor import FuelPredictor
 from src.models.arrival_predictor import ArrivalPredictor

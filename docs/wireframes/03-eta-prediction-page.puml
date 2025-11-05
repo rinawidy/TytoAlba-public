@@ -1,0 +1,184 @@
+@startuml ETA-Prediction-Page
+!theme plain
+scale 1.5
+
+title TytoAlba - ETA Prediction & Analysis (Desktop)
+
+salt
+{+
+  {* TytoAlba | <b>ETA Prediction</b> | [Profile v] | [Logout] }
+  {
+    {T
+      + Dashboard
+      + Ships
+      + <b>ETA Prediction</b>
+      + Fuel Monitor
+      + Reports
+      + Analytics
+    } |
+    {
+      {
+        == ETA Prediction - Powered by LSTM Neural Network
+      }
+      --
+      {
+        {
+          == Select Ship for Prediction
+          {
+            ^Ship Selection^
+            Rasuna Baruna (In Transit)
+            Latifah Baruna (In Transit)
+            Martha Baruna (In Port)
+            Meutia Baruna (In Transit)
+            Devi Baruna (Delayed)
+          } | {
+            <b>Selected:</b> Rasuna Baruna
+            <b>MMSI:</b> 525012345
+            <b>Current Position:</b> -5.5°, 112.5°
+            <b>Destination:</b> Taboneo Port
+            <b>Distance Remaining:</b> 487 nm
+            <b>Current Speed:</b> 15.2 knots
+            .
+            [ 🔮 Generate Prediction ]
+          }
+        }
+      }
+      --
+      {
+        == Prediction Results
+        {
+          {
+            <color:green><size:16><b>✓ Prediction Generated Successfully</b></size></color>
+            .
+            == Estimated Time of Arrival (ETA)
+            .
+            <size:20><b>October 22, 2024 at 14:30 WIB</b></size>
+            .
+            <b>Time Remaining:</b> 24 hours 30 minutes
+            <b>Arrival Date:</b> Tomorrow
+            .
+            == Confidence Metrics
+            {
+              <b>Model Confidence:</b> 92%
+              "████████████████████████████████████░░░░"
+              .
+              <b>95% Confidence Interval:</b>
+              Earliest: Oct 22, 12:06 WIB (-2h 24m)
+              Latest: Oct 22, 16:54 WIB (+2h 24m)
+              .
+              <b>Model Version:</b> lstm-v2.3.1
+              <b>Last Training:</b> Oct 15, 2024
+              <b>Training Accuracy:</b> MAE 28 min, MAPE 4.2%
+            }
+          } | {
+            == Predicted Fuel on Arrival
+            .
+            "     ┌─────────┐"
+            "     │ ████░░░ │  42%"
+            "     │         │"
+            "     │ 8,500 L │"
+            "     └─────────┘"
+            .
+            <b>Current Fuel:</b> 12,500 L (68%)
+            <b>Predicted Consumption:</b> 4,000 L
+            <b>Consumption Rate:</b> 163 L/h
+            .
+            <color:green>✓ Sufficient fuel for arrival</color>
+            .
+            <b>Recommended Action:</b> None
+          }
+        }
+      }
+      --
+      {
+        == Prediction Factors Analysis
+        {#
+          <b>Factor</b> | <b>Current Value</b> | <b>Impact on ETA</b> | <b>Weight</b>
+          Distance to Destination | 487 nautical miles | High | ████████░░
+          Current Speed | 15.2 knots | High | ████████░░
+          Weather Conditions | Moderate wind (12 kt NE) | Medium | █████░░░░░
+          Sea Current | 1.5 kt favorable | Low | ███░░░░░░░
+          Wave Height | 1.2m (slight) | Low | ██░░░░░░░░
+          Historical Route Performance | Avg 26h 15m | Medium | ██████░░░░
+          Vessel Characteristics | 15K DWT, 145m | Low | ██░░░░░░░░
+          Traffic Density | Low congestion | Low | ██░░░░░░░░
+        }
+      }
+      --
+      {
+        == Route Visualization with Prediction
+        {^
+          "┌────────────────────────────────────────────────────────────────────────┐"
+          "│                                                                        │"
+          "│   🏁 Origin: Jepara Port                    Departed: Oct 20, 14:00   │"
+          "│      │                                                                 │"
+          "│      ▼ ═══════════════════> (45% complete, 12h elapsed)               │"
+          "│                                                                        │"
+          "│   📍 Current: -5.5°, 112.5°                 Current Time: Oct 21, 14:30│"
+          "│      │                                                                 │"
+          "│      │  ☁ Weather: Partly Cloudy, 28°C                                │"
+          "│      │  🌊 Waves: 1.2m, Wind: 12kt NE                                 │"
+          "│      │                                                                 │"
+          "│      ▼ ···············> (55% remaining, ~24.5h predicted)             │"
+          "│                                                                        │"
+          "│   📌 Waypoint: -4.2°, 114.8°                ETA: Oct 21, 22:00        │"
+          "│      │                                                                 │"
+          "│      ▼ ···············>                                               │"
+          "│                                                                        │"
+          "│   🎯 Destination: Taboneo Port              ETA: Oct 22, 14:30 ± 2h24m│"
+          "│                                                                        │"
+          "│   [ Show Weather Forecast ] [ Show Traffic ] [ Alternative Routes ]   │"
+          "└────────────────────────────────────────────────────────────────────────┘"
+        }
+      }
+      --
+      {
+        == Prediction History & Comparison
+        {SI
+          <b>Prediction Time</b> | <b>Predicted ETA</b> | <b>Confidence</b> | <b>Actual ETA</b> | <b>Accuracy</b> | <b>Status</b>
+          Oct 21, 14:30 | Oct 22, 14:30 ± 2h24m | 92% | - | - | <color:blue>Current</color>
+          Oct 21, 08:00 | Oct 22, 13:45 ± 2h15m | 90% | - | - | Previous
+          Oct 20, 20:00 | Oct 22, 12:30 ± 3h00m | 85% | - | - | Previous
+          Oct 15, 10:00 | Oct 17, 09:15 ± 1h45m | 94% | Oct 17, 09:05 | <color:green>✓ 10 min</color> | Completed
+          Oct 12, 14:20 | Oct 14, 16:00 ± 2h00m | 91% | Oct 14, 17:30 | <color:orange>△ 90 min</color> | Completed
+        }
+      }
+      --
+      {
+        {
+          == Model Performance Insights
+          {
+            <b>Overall Model Accuracy (Last 30 Days):</b>
+            • Mean Absolute Error (MAE): 28 minutes
+            • Mean Absolute Percentage Error (MAPE): 4.2%
+            • R² Score: 0.94
+            • Predictions within 1 hour: 87%
+            • Predictions within 2 hours: 96%
+            .
+            <color:green>✓ Model is performing above target (MAE < 30 min)</color>
+          }
+        } | {
+          == Alerts & Recommendations
+          {
+            ℹ <b>Weather Advisory:</b>
+            Moderate wind expected at Waypoint 3
+            (15 kt E). Slight delay possible.
+            .
+            ✓ <b>Route Status:</b>
+            Current route optimal. No
+            alternative routes recommended.
+            .
+            ⚠ <b>Fuel Advisory:</b>
+            Current consumption rate higher
+            than average. Monitor fuel levels.
+          }
+        }
+      }
+      --
+      {
+        [ 📊 View Detailed Analysis ] | [ 📄 Export Prediction Report (PDF) ] | [ 📧 Email to Stakeholders ] | [ 🔔 Set ETA Alert ]
+      }
+    }
+  }
+}
+@enduml

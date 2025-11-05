@@ -42,3 +42,14 @@ coverage.txt
 # Vue
 .nuxt/
 .output/
+
+# Assignment/Homework files
+*tugas*
+*Tugas*
+*TUGAS*
+
+# Diagram and design files
+*.puml
+diagrams/
+wireframe/
+wireframes/

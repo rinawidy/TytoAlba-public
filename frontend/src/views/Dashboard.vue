@@ -113,6 +113,7 @@ interface ShipData {
   estimatedFuel: number
   status: string
   route: Array<[number, number]>
+  currentRouteIndex?: number  // Index in route array where ship currently is
 }
 
 const currentDateTime = ref('')
@@ -186,50 +187,61 @@ const shipIcon = (color: string) => {
   })
 }
 
-// Initialize map
-const initMap = () => {
-  // Create map centered on Indonesia
-  map = L.map('map').setView([-2.5, 118.0], 5)
+// Fetch ships from backend
+const fetchShips = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/ships')
+    if (!response.ok) {
+      throw new Error('Failed to fetch ships')
+    }
+    const data = await response.json()
+    ships.value = data
+    if (ships.value.length > 0) {
+      selectedShip.value = ships.value[0]
+    }
+  } catch (error) {
+    console.error('Error fetching ships:', error)
+    // Fallback to mock data if backend is not available
+    loadMockData()
+  }
+}
 
-  // Add tile layer (Light mode)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map)
-
-  // Mock ship data
+// Load mock data (fallback)
+const loadMockData = () => {
   ships.value = [
     {
       id: '1',
       name: 'Rasuna Baruna',
-      lat: -6.906,
-      lon: 110.831,
+      lat: -5.5,
+      lon: 112.5,
       destination: 'Taboneo Port',
       eta: new Date(Date.now() + 24 * 3600 * 1000),
       estimatedFuel: 8500,
       status: 'In Progress',
       route: [
         [-6.906, 110.831],  // Jepara
-        [-5.5, 112.5],
+        [-5.5, 112.5],      // Current position
         [-4.2, 114.8],
         [-2.8, 116.2],      // Taboneo
-      ]
+      ],
+      currentRouteIndex: 1
     },
     {
       id: '2',
       name: 'Latifah Baruna',
-      lat: -2.8,
-      lon: 116.2,
+      lat: -4.0,
+      lon: 118.0,
       destination: 'Labuan Bajo',
       eta: new Date(Date.now() + 36 * 3600 * 1000),
       estimatedFuel: 7200,
       status: 'In Progress',
       route: [
         [-2.8, 116.2],      // Taboneo
-        [-4.0, 118.0],
+        [-4.0, 118.0],      // Current position
         [-6.5, 120.5],
         [-8.497, 119.883],  // Labuan Bajo
-      ]
+      ],
+      currentRouteIndex: 1
     },
     {
       id: '3',
@@ -242,7 +254,8 @@ const initMap = () => {
       status: 'In Port',
       route: [
         [-6.906, 110.831],
-      ]
+      ],
+      currentRouteIndex: 0
     },
     {
       id: '4',
@@ -255,30 +268,65 @@ const initMap = () => {
       status: 'In Progress',
       route: [
         [-0.5, 117.0],      // Kalimantan
-        [-1.5, 117.5],
+        [-1.5, 117.5],      // Current position
         [-3.0, 119.0],
         [-5.147, 119.432],  // Makassar
-      ]
+      ],
+      currentRouteIndex: 1
     },
   ]
+  if (ships.value.length > 0) {
+    selectedShip.value = ships.value[0]
+  }
+}
 
-  selectedShip.value = ships.value[0]
+// Initialize map
+const initMap = async () => {
+  // Create map centered on Indonesia
+  map = L.map('map').setView([-2.5, 118.0], 5)
+
+  // Add tile layer (Light mode)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map)
+
+  // Fetch ship data from backend
+  await fetchShips()
 
   // Add ships and routes to map
   ships.value.forEach((ship, index) => {
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
     const color = colors[index % colors.length]
 
-    // Add route line (dotted)
+    // Add route lines with solid (traversed) and dotted (remaining) segments
     if (ship.route.length > 1) {
-      const routeLine = L.polyline(ship.route, {
-        color: color,
-        weight: 3,
-        opacity: 0.7,
-        dashArray: '10, 10',
-        dashOffset: '0'
-      }).addTo(map!)
-      routeLines.push(routeLine)
+      const currentIdx = ship.currentRouteIndex || 0
+
+      // Traversed route (solid line, green)
+      if (currentIdx > 0) {
+        const traversedRoute = ship.route.slice(0, currentIdx + 1)
+        const traversedLine = L.polyline(traversedRoute, {
+          color: '#10b981',  // Green color for completed path
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '',  // Solid line
+        }).addTo(map!)
+        routeLines.push(traversedLine)
+      }
+
+      // Remaining route (dotted line, blue/gray)
+      if (currentIdx < ship.route.length - 1) {
+        const remainingRoute = ship.route.slice(currentIdx)
+        const remainingLine = L.polyline(remainingRoute, {
+          color: '#94a3b8',  // Gray color for remaining path
+          weight: 3,
+          opacity: 0.6,
+          dashArray: '10, 10',  // Dotted line
+          dashOffset: '0'
+        }).addTo(map!)
+        routeLines.push(remainingLine)
+      }
     }
 
     // Add ship marker

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ship hull -->
+  <path d="M 30 45 L 25 65 Q 25 70 30 70 L 70 70 Q 75 70 75 65 L 70 45 Z"
+        fill="url(#grad)" stroke="#1e3a8a" stroke-width="2"/>
+
+  <!-- Ship cabin -->
+  <rect x="40" y="30" width="20" height="18" fill="#1e40af" stroke="#1e3a8a" stroke-width="2" rx="2"/>
+
+  <!-- Mast -->
+  <rect x="48" y="15" width="4" height="18" fill="#64748b" stroke="#334155" stroke-width="1"/>
+
+  <!-- Flag -->
+  <path d="M 52 15 L 65 18 L 52 21 Z" fill="#ef4444" stroke="#991b1b" stroke-width="1"/>
+
+  <!-- Porthole 1 -->
+  <circle cx="45" cy="37" r="2.5" fill="#93c5fd" stroke="#1e3a8a" stroke-width="1"/>
+
+  <!-- Porthole 2 -->
+  <circle cx="55" cy="37" r="2.5" fill="#93c5fd" stroke="#1e3a8a" stroke-width="1"/>
+
+  <!-- Waves -->
+  <path d="M 15 75 Q 20 72 25 75 Q 30 78 35 75 Q 40 72 45 75 Q 50 78 55 75 Q 60 72 65 75 Q 70 78 75 75 Q 80 72 85 75"
+        fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.6"/>
+  <path d="M 10 82 Q 18 79 25 82 Q 32 85 40 82 Q 48 79 55 82 Q 62 85 70 82 Q 78 79 85 82 Q 92 85 95 82"
+        fill="none" stroke="#60a5fa" stroke-width="2" opacity="0.4"/>
+</svg>

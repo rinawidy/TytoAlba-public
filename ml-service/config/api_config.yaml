@@ -1,0 +1,67 @@
+# API Configuration
+
+api:
+  title: "TytoAlba Vessel Arrival Prediction"
+  description: "LSTM-based deep learning service for ship arrival time prediction"
+  version: "2.0.0"
+
+  # Server settings
+  server:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+    reload: false  # Set to true for development
+
+  # CORS settings
+  cors:
+    allow_origins:
+      - "*"  # Update for production
+    allow_credentials: true
+    allow_methods:
+      - "*"
+    allow_headers:
+      - "*"
+
+  # Rate limiting (optional, requires additional package)
+  rate_limit:
+    enabled: false
+    requests_per_minute: 60
+
+  # Logging
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# External data sources
+data_sources:
+  # AIS data source
+  ais:
+    type: "database"  # database or api
+    connection:
+      host: "${DB_HOST}"
+      port: "${DB_PORT}"
+      database: "${DB_NAME}"
+      user: "${DB_USER}"
+      password: "${DB_PASSWORD}"
+    query_timeout: 30  # seconds
+
+  # Weather data source
+  weather:
+    type: "api"
+    provider: "openweathermap"  # or other marine weather service
+    api_key: "${WEATHER_API_KEY}"
+    base_url: "https://api.openweathermap.org/data/2.5/"
+    timeout: 10  # seconds
+    cache_ttl: 3600  # seconds
+
+# Model serving
+model:
+  path: "models/vessel_arrival_lstm.h5"
+  load_on_startup: true
+  lazy_loading: false
+
+  # GPU settings (if available)
+  gpu:
+    enabled: false
+    device_id: 0
+    memory_growth: true

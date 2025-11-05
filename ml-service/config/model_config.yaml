@@ -1,0 +1,89 @@
+# Model Configuration for Vessel Arrival LSTM
+
+model:
+  name: VesselArrivalLSTM
+  version: "2.0.0"
+
+  # Input dimensions
+  sequence_length: 48  # 24 hours at 30-min intervals
+  sequence_features: 8  # lat, lon, speed, course, wind, wave, current, temp
+  static_features: 10  # distance, speed_avg, weather, alignment, time encodings
+
+  # Architecture hyperparameters
+  architecture:
+    # CNN layers
+    cnn:
+      filters_1: 64
+      filters_2: 128
+      kernel_size: 3
+      pool_size: 2
+
+    # Attention layer
+    attention:
+      enabled: true
+
+    # LSTM layer
+    lstm:
+      units: 64
+      bidirectional: true
+      dropout: 0.2
+      recurrent_dropout: 0.2
+
+    # Dense layers
+    dense:
+      units_1: 128
+      units_2: 64
+      units_3: 32
+      dropout_1: 0.3
+      dropout_2: 0.2
+
+  # Training parameters
+  training:
+    optimizer: adam
+    learning_rate: 0.001
+    loss: mean_squared_error
+    metrics:
+      - mae
+      - mse
+      - mape
+
+    epochs: 100
+    batch_size: 32
+    validation_split: 0.2
+
+    # Callbacks
+    early_stopping:
+      patience: 15
+      restore_best_weights: true
+
+    reduce_lr:
+      factor: 0.5
+      patience: 7
+      min_lr: 0.000001
+
+# Data preprocessing
+preprocessing:
+  sequence_length: 48
+  normalization_method: standard  # standard or minmax
+
+  # Feature engineering
+  features:
+    temporal_encoding: cyclical  # cyclical or one-hot
+    weather_severity_weights:
+      wind: 0.6
+      wave: 0.4
+
+  # Data cleaning
+  outlier_removal:
+    max_speed_knots: 30
+    max_speed_jump_kmh: 50
+
+  # Interpolation
+  interpolation:
+    interval_minutes: 30
+    method: linear
+
+# Inference settings
+inference:
+  confidence_samples: 10  # Number of MC Dropout samples
+  batch_size: 1
