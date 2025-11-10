@@ -26,10 +26,22 @@
           <Clock class="w-6 h-6 text-green-500" />
           <h2 class="text-xl font-semibold text-gray-900">Arrival Prediction</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <p class="text-sm text-gray-600 mb-1">Selected Ship</p>
             <p class="text-lg font-semibold text-gray-900">{{ selectedShip?.name || 'N/A' }}</p>
+            <p class="text-xs text-gray-500">{{ selectedShip?.type || '' }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Coal Capacity</p>
+            <p class="text-lg font-semibold text-orange-600">
+              <span v-if="selectedShip?.type === 'Tugboat' && selectedShip?.bargeCoalCapacity">
+                {{ selectedShip.bargeCoalCapacity?.toLocaleString() || 0 }} tons
+              </span>
+              <span v-else>
+                {{ selectedShip?.coalCapacity?.toLocaleString() || 0 }} tons
+              </span>
+            </p>
           </div>
           <div>
             <p class="text-sm text-gray-600 mb-1">Estimated Arrival</p>
@@ -41,7 +53,7 @@
           </div>
           <div>
             <p class="text-sm text-gray-600 mb-1">Fuel on Arrival (Est.)</p>
-            <p class="text-lg font-semibold text-blue-600">{{ selectedShip?.estimatedFuel || 0 }} L</p>
+            <p class="text-lg font-semibold text-blue-600">{{ selectedShip?.estimatedFuel?.toLocaleString() || 'N/A' }} L</p>
           </div>
         </div>
       </div>
@@ -60,10 +72,12 @@
             <thead class="bg-gray-100">
               <tr>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">No</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">MMSI</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Ship Name</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Coal Capacity (tons)</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Port Destination</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">ETA</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Estimated Fuel on Arrival</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
               </tr>
             </thead>
@@ -76,10 +90,22 @@
                 :class="{ 'bg-blue-50': selectedShip?.id === ship.id }"
               >
                 <td class="px-4 py-3 text-sm text-gray-900">{{ idx + 1 }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600 font-mono">{{ ship.mmsi }}</td>
                 <td class="px-4 py-3 text-sm text-gray-900 font-medium">{{ ship.name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-900">{{ ship.destination }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ ship.type }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  <span v-if="ship.type === 'Tugboat' && ship.bargeCoalCapacity">
+                    {{ ship.bargeCoalCapacity.toLocaleString() }} (barge: {{ ship.pushingBarge }})
+                  </span>
+                  <span v-else-if="ship.type === 'Barge' && ship.pushedBy">
+                    {{ ship.coalCapacity.toLocaleString() }} (by: {{ ship.pushedBy }})
+                  </span>
+                  <span v-else>
+                    {{ ship.coalCapacity.toLocaleString() }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ ship.destination || 'N/A' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-900">{{ formatETA(ship.eta) }}</td>
-                <td class="px-4 py-3 text-sm text-gray-900">{{ ship.estimatedFuel.toLocaleString() }} L</td>
                 <td class="px-4 py-3 text-sm">
                   <span
                     class="px-2 py-1 text-xs rounded"
@@ -102,18 +128,29 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Ship, Clock } from 'lucide-vue-next'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import shipsData from '../data/ships.json'
 
 interface ShipData {
   id: string
+  mmsi: string
   name: string
-  lat: number
-  lon: number
-  destination: string
-  eta: Date
-  estimatedFuel: number
+  type: string  // "Bulk Carrier", "Tugboat", "Barge"
+  coalCapacity: number
+  loa: number
+  beam: number
+  dwt: number
   status: string
-  route: Array<[number, number]>
-  currentRouteIndex?: number  // Index in route array where ship currently is
+  pushingBarge?: string  // For tugboats
+  bargeCoalCapacity?: number  // Coal capacity of barge being pushed
+  pushedBy?: string  // For barges
+  // Map display fields (optional for tugboats/barges)
+  lat?: number
+  lon?: number
+  destination?: string
+  eta?: Date
+  estimatedFuel?: number
+  route?: Array<[number, number]>
+  currentRouteIndex?: number
 }
 
 const currentDateTime = ref('')
@@ -166,7 +203,7 @@ const getStatusClass = (status: string) => {
 // Select ship
 const selectShip = (ship: ShipData) => {
   selectedShip.value = ship
-  if (map) {
+  if (map && ship.lat !== undefined && ship.lon !== undefined) {
     map.setView([ship.lat, ship.lon], 7)
   }
 }
@@ -208,75 +245,42 @@ const fetchShips = async () => {
 
 // Load mock data (fallback)
 const loadMockData = () => {
-  ships.value = [
-    {
-      id: '1',
-      name: 'Rasuna Baruna',
-      lat: -5.5,
-      lon: 112.5,
-      destination: 'Taboneo Port',
-      eta: new Date(Date.now() + 24 * 3600 * 1000),
-      estimatedFuel: 8500,
-      status: 'In Progress',
-      route: [
-        [-6.906, 110.831],  // Jepara
-        [-5.5, 112.5],      // Current position
-        [-4.2, 114.8],
-        [-2.8, 116.2],      // Taboneo
-      ],
-      currentRouteIndex: 1
-    },
-    {
-      id: '2',
-      name: 'Latifah Baruna',
-      lat: -4.0,
-      lon: 118.0,
-      destination: 'Labuan Bajo',
-      eta: new Date(Date.now() + 36 * 3600 * 1000),
-      estimatedFuel: 7200,
-      status: 'In Progress',
-      route: [
-        [-2.8, 116.2],      // Taboneo
-        [-4.0, 118.0],      // Current position
-        [-6.5, 120.5],
-        [-8.497, 119.883],  // Labuan Bajo
-      ],
-      currentRouteIndex: 1
-    },
-    {
-      id: '3',
-      name: 'Martha Baruna',
-      lat: -6.906,
-      lon: 110.831,
-      destination: 'Jepara Port',
-      eta: new Date(Date.now() + 2 * 3600 * 1000),
-      estimatedFuel: 9800,
-      status: 'In Port',
-      route: [
-        [-6.906, 110.831],
-      ],
-      currentRouteIndex: 0
-    },
-    {
-      id: '4',
-      name: 'Meutia Baruna',
-      lat: -1.5,
-      lon: 117.5,
-      destination: 'Makassar Port',
-      eta: new Date(Date.now() + 48 * 3600 * 1000),
-      estimatedFuel: 6500,
-      status: 'In Progress',
-      route: [
-        [-0.5, 117.0],      // Kalimantan
-        [-1.5, 117.5],      // Current position
-        [-3.0, 119.0],
-        [-5.147, 119.432],  // Makassar
-      ],
-      currentRouteIndex: 1
-    },
-  ]
+  // Load ships from ships.json
+  const loadedShips = shipsData.ships.map((ship: any) => {
+    // Add mock position and route data for bulk carriers (for map display)
+    if (ship.type === 'Bulk Carrier') {
+      const destinations = ['Taboneo Port', 'Labuan Bajo', 'Makassar Port', 'Jepara Port', 'Surabaya Port']
+      const routes = [
+        [[-6.906, 110.831], [-5.5, 112.5], [-4.2, 114.8], [-2.8, 116.2]],  // To Taboneo
+        [[-2.8, 116.2], [-4.0, 118.0], [-6.5, 120.5], [-8.497, 119.883]],  // To Labuan Bajo
+        [[-0.5, 117.0], [-1.5, 117.5], [-3.0, 119.0], [-5.147, 119.432]],  // To Makassar
+        [[-6.906, 110.831]],  // In Jepara Port
+        [[-7.250, 112.750], [-7.200, 112.700], [-7.180, 112.740]]  // To Surabaya
+      ]
+
+      const routeIdx = parseInt(ship.id) % routes.length
+      const route = routes[routeIdx]
+      const destination = destinations[routeIdx]
+
+      return {
+        ...ship,
+        lat: route[Math.min(1, route.length - 1)][0],
+        lon: route[Math.min(1, route.length - 1)][1],
+        destination: destination,
+        eta: new Date(Date.now() + (12 + parseInt(ship.id) * 6) * 3600 * 1000),
+        estimatedFuel: 6500 + parseInt(ship.id) * 200,
+        route: route,
+        currentRouteIndex: Math.min(1, route.length - 1)
+      }
+    }
+    // For tugboats and barges, no route data needed
+    return ship
+  })
+
+  ships.value = loadedShips
   if (ships.value.length > 0) {
-    selectedShip.value = ships.value[0]
+    // Select first bulk carrier for initial display
+    selectedShip.value = ships.value.find(s => s.type === 'Bulk Carrier') || ships.value[0]
   }
 }
 
@@ -294,13 +298,15 @@ const initMap = async () => {
   // Fetch ship data from backend
   await fetchShips()
 
-  // Add ships and routes to map
-  ships.value.forEach((ship, index) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+  // Add ships and routes to map (only bulk carriers with route data)
+  const bulkCarriers = ships.value.filter(ship => ship.route && ship.route.length > 0)
+
+  bulkCarriers.forEach((ship, index) => {
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
     const color = colors[index % colors.length]
 
     // Add route lines with solid (traversed) and dotted (remaining) segments
-    if (ship.route.length > 1) {
+    if (ship.route && ship.route.length > 1) {
       const currentIdx = ship.currentRouteIndex || 0
 
       // Traversed route (solid line, green)
@@ -329,21 +335,25 @@ const initMap = async () => {
       }
     }
 
-    // Add ship marker
-    const marker = L.marker([ship.lat, ship.lon], {
-      icon: shipIcon(color)
-    }).addTo(map!)
+    // Add ship marker (only if lat/lon exists)
+    if (ship.lat !== undefined && ship.lon !== undefined) {
+      const marker = L.marker([ship.lat, ship.lon], {
+        icon: shipIcon(color)
+      }).addTo(map!)
 
-    marker.bindPopup(`
-      <div class="p-2">
-        <h3 class="font-bold text-gray-900">${ship.name}</h3>
-        <p class="text-sm text-gray-600">Destination: ${ship.destination}</p>
-        <p class="text-sm text-gray-600">ETA: ${formatETA(ship.eta)}</p>
-        <p class="text-sm text-gray-600">Fuel Est.: ${ship.estimatedFuel.toLocaleString()} L</p>
-      </div>
-    `)
+      marker.bindPopup(`
+        <div class="p-2">
+          <h3 class="font-bold text-gray-900">${ship.name}</h3>
+          <p class="text-sm text-gray-600">Type: ${ship.type}</p>
+          <p class="text-sm text-gray-600">Coal Capacity: ${ship.coalCapacity.toLocaleString()} tons</p>
+          <p class="text-sm text-gray-600">Destination: ${ship.destination || 'N/A'}</p>
+          <p class="text-sm text-gray-600">ETA: ${formatETA(ship.eta)}</p>
+          <p class="text-sm text-gray-600">Fuel Est.: ${ship.estimatedFuel?.toLocaleString() || 'N/A'} L</p>
+        </div>
+      `)
 
-    shipMarkers.push(marker)
+      shipMarkers.push(marker)
+    }
   })
 }
 
