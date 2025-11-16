@@ -45,7 +45,7 @@
           </div>
           <div>
             <p class="text-sm text-gray-600 mb-1">Estimated Arrival</p>
-            <p class="text-lg font-semibold text-green-600">{{ formatETA(selectedShip?.eta) }}</p>
+            <p class="text-lg font-semibold text-green-600">{{ formatETA(selectedShip?.eta, selectedShip?.status) }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-600 mb-1">Port Destination</p>
@@ -164,7 +164,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900">{{ ship.destination || 'N/A' }}</td>
-                <td class="px-4 py-3 text-sm text-gray-900">{{ formatETA(ship.eta) }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ formatETA(ship.eta, ship.status) }}</td>
                 <td class="px-4 py-3 text-sm">
                   <span
                     class="px-2 py-1 text-xs rounded"
@@ -256,7 +256,12 @@ const updateDateTime = () => {
 }
 
 // Format ETA
-const formatETA = (eta: Date | undefined) => {
+const formatETA = (eta: Date | undefined, status?: string) => {
+  // If ship is at port, show "Arrived" instead of ETA
+  if (status && (status.toLowerCase() === 'at_port' || status.toLowerCase() === 'in port')) {
+    return 'Arrived'
+  }
+
   if (!eta) return 'N/A'
   return new Date(eta).toLocaleString('id-ID', {
     year: 'numeric',
@@ -423,7 +428,7 @@ const addShipsToMap = () => {
         <div class="p-2">
           <h4 class="font-bold text-blue-600">Predicted Route</h4>
           <p class="text-sm text-gray-600">To: ${ship.destination || 'Unknown'}</p>
-          <p class="text-xs text-gray-500">ETA: ${formatETA(ship.eta)}</p>
+          <p class="text-xs text-gray-500">ETA: ${formatETA(ship.eta, ship.status)}</p>
         </div>
       `)
 
@@ -443,7 +448,7 @@ const addShipsToMap = () => {
           <p class="text-sm text-gray-600">Type: ${ship.type || 'N/A'}</p>
           <p class="text-sm text-gray-600">Coal Capacity: ${ship.coalCapacity?.toLocaleString() || 'N/A'} tons</p>
           <p class="text-sm text-gray-600">Destination: ${ship.destination || 'N/A'}</p>
-          <p class="text-sm text-gray-600">ETA: ${formatETA(ship.eta)}</p>
+          <p class="text-sm text-gray-600">ETA: ${formatETA(ship.eta, ship.status)}</p>
           <p class="text-sm text-gray-600">Fuel Est.: ${ship.estimatedFuel?.toLocaleString() || 'N/A'} L</p>
           <p class="text-xs text-gray-500 mt-2">
             <span class="inline-block w-3 h-0.5 bg-green-500 mr-1"></span> Historical Trail
