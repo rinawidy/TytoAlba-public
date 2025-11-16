@@ -36,11 +36,11 @@ env/
 # Environment variables
 .env
 
-# Models
-models/*.h5
-models/*.pkl
-models/*.pth
-models/*.ckpt
+# Models (commented out to allow trained models in git)
+# models/*.h5
+# models/*.pkl
+# models/*.pth
+# models/*.ckpt
 !models/.gitkeep
 
 # Data
