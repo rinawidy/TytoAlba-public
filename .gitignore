@@ -58,3 +58,13 @@ wireframes/
 SESSION_SUMMARY*.md
 TODO*NUMBERED*.md
 PROJECT_CONTINUATION_PLAN.md
+
+# Documentation and text files
+*.md
+*.txt
+docs/
+
+# But keep important documentation
+!README.md
+!INSTALLATION.md
+!CHANGELOG.md
