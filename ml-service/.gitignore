@@ -47,7 +47,9 @@ env/
 data/*.csv
 data/*.json
 data/*.parquet
+data/snapshots/
 !data/.gitkeep
+!data/processed/*.csv
 
 # Logs
 *.log

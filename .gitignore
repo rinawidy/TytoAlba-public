@@ -64,7 +64,9 @@ PROJECT_CONTINUATION_PLAN.md
 *.txt
 docs/
 
-# But keep important documentation
+# But keep important documentation and dependencies
 !README.md
 !INSTALLATION.md
 !CHANGELOG.md
+!requirements.txt
+!**/requirements.txt
