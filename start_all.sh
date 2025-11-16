@@ -19,54 +19,94 @@ echo "📁 Project root: $PROJECT_ROOT"
 echo "📝 Logs directory: $LOG_DIR"
 echo ""
 
-# Function to check if port is in use
-check_port() {
+# Function to kill any existing process on port
+kill_port() {
     local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-        echo "⚠️  Port $port is already in use"
+    local service_name=$2
+
+    # Method 1: Kill by port using fuser
+    if command -v fuser >/dev/null 2>&1; then
+        fuser -k ${port}/tcp 2>/dev/null && echo "   🔄 Cleaning up old $service_name process (Port $port)..." && sleep 1
+    fi
+
+    # Method 2: Parse PIDs from ss/netstat and kill
+    local pids=$(ss -tlnp 2>/dev/null | grep ":$port" | grep -oP 'pid=\K[0-9]+' | sort -u)
+    if [ -z "$pids" ]; then
+        pids=$(netstat -tlnp 2>/dev/null | grep ":$port" | awk '{print $7}' | cut -d'/' -f1 | grep -E '^[0-9]+$')
+    fi
+
+    if [ -n "$pids" ]; then
+        echo "   🔄 Cleaning up old $service_name process (Port $port, PIDs: $pids)..."
+        for pid in $pids; do
+            kill -9 $pid 2>/dev/null
+        done
+        sleep 1
+    fi
+
+    # Method 3: Kill by process patterns
+    if [ "$port" = "8080" ]; then
+        pkill -9 -f "cmd/api/main.go" 2>/dev/null
+        pkill -9 -f "go run.*main.go" 2>/dev/null
+        pkill -9 -f "go-build.*main" 2>/dev/null
+    elif [ "$port" = "5000" ]; then
+        pkill -9 -f "ml_service.py" 2>/dev/null
+    elif [ "$port" = "5173" ]; then
+        pkill -9 -f "vite" 2>/dev/null
+        pkill -9 -f "node.*vite" 2>/dev/null
+    fi
+
+    # Verify port is now free
+    sleep 1
+    if ss -tln 2>/dev/null | grep -q ":$port " || netstat -tln 2>/dev/null | grep -q ":$port "; then
+        echo "   ⚠️  Warning: Port $port still in use after cleanup"
         return 1
     fi
     return 0
 }
 
-# Start ML Service
-echo "🐍 Starting ML Service (Port 5000)..."
-if check_port 5000; then
-    cd "$PROJECT_ROOT/ml-service"
-    source venv/bin/activate
-    nohup python api/ml_service.py > "$LOG_DIR/ml-service.log" 2>&1 &
-    ML_PID=$!
-    echo "   ✓ ML Service started (PID: $ML_PID)"
-    echo "   📄 Log: $LOG_DIR/ml-service.log"
+# Check MQTT Service
+echo "📡 Checking MQTT Broker (Port 1883)..."
+if systemctl is-active --quiet mosquitto 2>/dev/null; then
+    echo "   ✓ MQTT Broker (mosquitto) is running"
+elif pgrep mosquitto > /dev/null 2>&1; then
+    echo "   ✓ MQTT Broker (mosquitto) is running"
 else
-    echo "   ✗ ML Service not started (port conflict)"
+    echo "   ⚠️  MQTT Broker not detected (optional for basic functionality)"
+    echo "   💡 To install: sudo apt-get install mosquitto mosquitto-clients"
 fi
 echo ""
 
-# Start Backend
+# Start Backend (depends on MQTT)
 echo "🔧 Starting Backend (Port 8080)..."
-if check_port 8080; then
-    cd "$PROJECT_ROOT/backend"
-    nohup go run cmd/api/main.go > "$LOG_DIR/backend.log" 2>&1 &
-    BACKEND_PID=$!
-    echo "   ✓ Backend started (PID: $BACKEND_PID)"
-    echo "   📄 Log: $LOG_DIR/backend.log"
-else
-    echo "   ✗ Backend not started (port conflict)"
-fi
+kill_port 8080 "Backend"
+cd "$PROJECT_ROOT/backend"
+nohup go run cmd/api/main.go > "$LOG_DIR/backend.log" 2>&1 &
+BACKEND_PID=$!
+echo "   ✓ Backend started (PID: $BACKEND_PID)"
+echo "   📄 Log: $LOG_DIR/backend.log"
+sleep 2
 echo ""
 
-# Start Frontend
+# Start ML Service (depends on Backend)
+echo "🐍 Starting ML Service (Port 5000)..."
+kill_port 5000 "ML Service"
+cd "$PROJECT_ROOT/ml-service"
+source venv/bin/activate
+nohup python api/ml_service.py > "$LOG_DIR/ml-service.log" 2>&1 &
+ML_PID=$!
+echo "   ✓ ML Service started (PID: $ML_PID)"
+echo "   📄 Log: $LOG_DIR/ml-service.log"
+sleep 2
+echo ""
+
+# Start Frontend (depends on Backend + ML Service)
 echo "🎨 Starting Frontend (Port 5173)..."
-if check_port 5173; then
-    cd "$PROJECT_ROOT/frontend"
-    nohup npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
-    FRONTEND_PID=$!
-    echo "   ✓ Frontend started (PID: $FRONTEND_PID)"
-    echo "   📄 Log: $LOG_DIR/frontend.log"
-else
-    echo "   ✗ Frontend not started (port conflict)"
-fi
+kill_port 5173 "Frontend"
+cd "$PROJECT_ROOT/frontend"
+nohup npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
+FRONTEND_PID=$!
+echo "   ✓ Frontend started (PID: $FRONTEND_PID)"
+echo "   📄 Log: $LOG_DIR/frontend.log"
 echo ""
 
 # Wait for services to start

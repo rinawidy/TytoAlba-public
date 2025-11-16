@@ -56,6 +56,10 @@ func main() {
 	http.HandleFunc("/api/mqtt/ship", handlers.GetShipByMMSI)           // Single ship by MMSI
 	http.HandleFunc("/api/mqtt/history", handlers.GetShipHistory)       // Ship history
 	http.HandleFunc("/api/mqtt/stats", handlers.GetShipStats)           // Ship statistics
+	http.HandleFunc("/api/historical/voyages", handlers.GetHistoricalVoyages)  // All historical data
+	http.HandleFunc("/api/historical/vessel", handlers.GetVesselHistory)        // Historical data for specific vessel
+	http.HandleFunc("/api/historical/stats", handlers.GetHistoricalStats)       // Historical data statistics
+	http.HandleFunc("/api/historical/recent", handlers.GetRecentPositions)      // Recent positions
 	http.HandleFunc("/health", healthCheck)
 	http.HandleFunc("/mqtt/status", mqttStatus)
 
@@ -71,6 +75,11 @@ func main() {
 	fmt.Println("  - GET  /api/mqtt/ship?mmsi=XXX   - Get ship by MMSI")
 	fmt.Println("  - GET  /api/mqtt/history?mmsi=XXX&hours=24 - Get ship history")
 	fmt.Println("  - GET  /api/mqtt/stats           - Get ship statistics")
+	fmt.Println("\nHistorical Data Endpoints:")
+	fmt.Println("  - GET  /api/historical/voyages   - Get all historical voyages")
+	fmt.Println("  - GET  /api/historical/vessel?mmsi=XXX - Get vessel history by MMSI")
+	fmt.Println("  - GET  /api/historical/stats     - Get historical data statistics")
+	fmt.Println("  - GET  /api/historical/recent?hours=24 - Get recent positions")
 	fmt.Println("\nMQTT Topics (subscribing):")
 	fmt.Println("  - tytoalba/ships/+/ais           - AIS position data")
 	fmt.Println("  - tytoalba/ships/+/sensors       - Sensor data (fuel, engine)")

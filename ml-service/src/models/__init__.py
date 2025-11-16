@@ -1,7 +1,11 @@
 """
-Models module for vessel arrival prediction
+Models module for vessel prediction (PyTorch)
 """
 
-from .lstm_arrival_predictor import VesselArrivalLSTM
+# PyTorch models - import individually as needed
+# from .pytorch_arrival_predictor import VesselArrivalPredictor
+# from .fuel_predictor import FuelConsumptionPredictor
+# from .anomaly_detector import VesselAnomalyDetector
+# from .route_optimizer import RouteOptimizer
 
-__all__ = ['VesselArrivalLSTM']
+__all__ = []

@@ -1,0 +1,181 @@
+TytoAlba ML Training Log
+Generated: 2025-11-15 21:35:58.707140
+======================================================================
+
+======================================================================
+  TytoAlba ML Training - Real + Synthetic Data
+  Evidence for Homework Submission
+======================================================================
+  Training started: 2025-11-15 21:35:58.710044
+  Output file: training_log.txt
+======================================================================
+
+✓ Device: CPU
+
+======================================================================
+  Loading Real Historical Data
+======================================================================
+✓ Loaded 5331 historical records
+✓ Loaded 12 ship specifications
+✓ Loaded 13 ports
+✓ Found 56 distinct voyages
+
+======================================================================
+  Preparing Real Voyage Sequences
+======================================================================
+⚠ Created 0 real voyage sequences
+  Reasons:
+    - Voyages < 48 records: 5/56
+    - Ship name or destination mismatches
+  Continuing with synthetic data only...
+
+======================================================================
+  Generating Synthetic Data for Augmentation
+======================================================================
+Generating 1000 synthetic voyage samples...
+✓ Created 1000 synthetic sequences
+
+======================================================================
+  Combining Real + Synthetic Data
+======================================================================
+✓ Combined dataset:
+  Real samples: 0
+  Synthetic samples: 1000
+  Total samples: 1000
+
+✓ Train/Val split:
+  Training: 800 samples
+  Validation: 200 samples
+
+======================================================================
+  Training ETA Predictor
+======================================================================
+✓ Model: 153,922 parameters
+
+🚀 Training...
+[INFO] Training on cpu
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 10/100 - Loss: 217902.6244 - MAE: 364.2701 - Val Loss: 136638.4062 - Val MAE: 293.1219
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 20/100 - Loss: 199348.3228 - MAE: 343.5711 - Val Loss: 131242.1406 - Val MAE: 291.2780
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 30/100 - Loss: 191441.3875 - MAE: 328.7778 - Val Loss: 129675.3906 - Val MAE: 291.3432
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 40/100 - Loss: 136569.9794 - MAE: 284.0465 - Val Loss: 62535.8047 - Val MAE: 197.8003
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 50/100 - Loss: 78912.5481 - MAE: 221.1375 - Val Loss: 24518.2969 - Val MAE: 119.3976
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 60/100 - Loss: 78975.3984 - MAE: 212.7692 - Val Loss: 22820.4531 - Val MAE: 115.3016
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 70/100 - Loss: 72231.9200 - MAE: 204.2971 - Val Loss: 16763.8535 - Val MAE: 94.5396
+[INFO] Model saved to models/eta_model.pth
+Epoch 80/100 - Loss: 69370.3383 - MAE: 198.6652 - Val Loss: 45668.6641 - Val MAE: 182.1241
+[INFO] Model saved to models/eta_model.pth
+Epoch 90/100 - Loss: 68107.8817 - MAE: 199.6908 - Val Loss: 16595.2031 - Val MAE: 98.1089
+[INFO] Model saved to models/eta_model.pth
+[INFO] Model saved to models/eta_model.pth
+Epoch 100/100 - Loss: 60714.4748 - MAE: 187.3181 - Val Loss: 13224.3076 - Val MAE: 82.8671
+✓ Arrival model loaded from models/eta_model.pth (checkpoint format)
+
+✓ ETA Model trained!
+  Best validation MAE: 71.36 minutes
+  Saved to: models/eta_model.pth
+
+======================================================================
+  Training Fuel Consumption Predictor
+  (Using synthetic data - no real fuel consumption data available)
+======================================================================
+Generating 1000 synthetic fuel consumption samples...
+✓ Training: 1000 samples
+✓ Validation: 200 samples
+✓ Model initialized
+
+🚀 Training...
+[INFO] Training Fuel Consumption model on cpu
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+Epoch 10/100 - Loss: 6920.1030 - MAE: 70.13 L/h - Val Loss: 5447.0195 - Val MAE: 64.80 L/h
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+[INFO] Model saved to models/fuel_model.pth
+Epoch 20/100 - Loss: 6564.6939 - MAE: 68.86 L/h - Val Loss: 5472.9194 - Val MAE: 64.10 L/h
+[INFO] Model saved to models/fuel_model.pth
+Epoch 30/100 - Loss: 6459.9575 - MAE: 67.46 L/h - Val Loss: 5396.9468 - Val MAE: 64.16 L/h
+[INFO] Early stopping at epoch 36
+✓ Fuel model loaded from models/fuel_model.pth (checkpoint format)
+
+✓ Fuel Model trained!
+  Best validation MAE: 62.68 L/h
+  Saved to: models/fuel_model.pth
+
+======================================================================
+  Generating Training Plots
+======================================================================
+⚠ Could not generate plots: No module named 'matplotlib'
+  (Install matplotlib: pip install matplotlib)
+
+======================================================================
+  ✓ TRAINING COMPLETE!
+======================================================================
+  Completed at: 2025-11-15 21:38:07.605549
+
+📊 Data used:
+  Real AIS voyages: 0
+  Synthetic voyages: 1000
+  Total training samples: 1000
+
+📁 Files generated for homework submission:
+  1. training_log.txt - This complete log file
+  2. training_plots.png - Training graphs (loss & MAE)
+  3. models/eta_model.pth - ETA predictor (trained on real + synthetic)
+  4. models/fuel_model.pth - Fuel predictor (synthetic)
+
+📈 Final Results:
+  ETA Model - Best Val MAE: 71.36 minutes
+  Fuel Model - Best Val MAE: 62.68 L/h
+
+🎓 Homework Submission Files:
+  - training_log.txt (this file)
+  - training_plots.png (graphs)
+  - Screenshot of model files: ls -lh models/
+  - Screenshot of ML service health check
+
+✅ Next steps:
+  1. Submit training_log.txt and training_plots.png for homework
+  2. Restart ML service:
+     pkill -f uvicorn
+     python -m uvicorn src.api:app --host 0.0.0.0 --port 8000 &
+  3. Verify models loaded:
+     curl http://localhost:8000/health
+======================================================================

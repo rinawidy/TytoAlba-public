@@ -381,10 +381,38 @@ class FuelConsumptionPredictor:
 
     def load_model(self, path: str):
         """Load model from file"""
-        checkpoint = torch.load(path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.to(self.device)
-        print(f"[INFO] Fuel model loaded from {path}")
+        try:
+            checkpoint = torch.load(path, map_location=self.device)
+
+            # Handle both dict and direct state_dict formats
+            if isinstance(checkpoint, dict):
+                if 'model_state_dict' in checkpoint:
+                    self.model.load_state_dict(checkpoint['model_state_dict'])
+                    print(f"✓ Fuel model loaded from {path} (checkpoint format)")
+                else:
+                    # Try loading as direct state dict
+                    self.model.load_state_dict(checkpoint)
+                    print(f"✓ Fuel model loaded from {path} (state dict format)")
+            else:
+                # Direct state dict (legacy format)
+                self.model.load_state_dict(checkpoint)
+                print(f"✓ Fuel model loaded from {path} (legacy format)")
+
+            self.model.to(self.device)
+            self.model.eval()
+        except FileNotFoundError:
+            print(f"✗ ERROR: Fuel model file not found at {path}")
+            print(f"  Please train the model first or check the file path")
+            raise
+        except KeyError as e:
+            print(f"✗ ERROR: Failed to load fuel model from {path}")
+            print(f"  Missing key: {e}")
+            print(f"  The model file may be corrupted or incompatible")
+            raise
+        except Exception as e:
+            print(f"✗ ERROR: Failed to load fuel model from {path}")
+            print(f"  Error: {type(e).__name__}: {str(e)}")
+            raise
 
     def save_model(self, path: str):
         """Save model to file"""

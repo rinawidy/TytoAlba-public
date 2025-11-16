@@ -5,10 +5,10 @@ FastAPI Application for ML Service
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dot env
+from dotenv import load_dotenv
 
-from src.models.fuel_predictor import FuelPredictor
-from src.models.arrival_predictor import ArrivalPredictor
+from src.models.fuel_predictor import FuelConsumptionPredictor
+from src.models.pytorch_arrival_predictor import VesselArrivalPredictor
 from src.schemas import (
     FuelPredictionRequest,
     FuelPredictionResponse,
@@ -37,12 +37,12 @@ app.add_middleware(
 )
 
 # Initialize predictors
-fuel_predictor = FuelPredictor()
-arrival_predictor = ArrivalPredictor()
+fuel_predictor = FuelConsumptionPredictor()
+arrival_predictor = VesselArrivalPredictor()
 
 # Model paths
-FUEL_MODEL_PATH = os.getenv('FUEL_MODEL_PATH', 'models/fuel_prediction_model.pkl')
-ARRIVAL_MODEL_PATH = os.getenv('ARRIVAL_MODEL_PATH', 'models/arrival_prediction_model.pkl')
+FUEL_MODEL_PATH = os.getenv('FUEL_MODEL_PATH', 'models/fuel_model.pth')
+ARRIVAL_MODEL_PATH = os.getenv('ARRIVAL_MODEL_PATH', 'models/eta_model.pth')
 
 
 @app.on_event("startup")

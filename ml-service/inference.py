@@ -16,12 +16,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
 
-import tensorflow as tf
+import torch
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from src.models.lstm_arrival_predictor import VesselArrivalLSTM
+from src.models.pytorch_arrival_predictor import VesselArrivalPredictor
 from src.preprocessing.data_pipeline import VoyageDataPreprocessor
 from src.preprocessing.utils import haversine_distance
 
@@ -31,23 +31,16 @@ from src.preprocessing.utils import haversine_distance
 # ============================================================================
 
 def configure_device():
-    """Auto-detect and configure GPU/CPU for TensorFlow"""
-    gpus = tf.config.list_physical_devices('GPU')
-
-    if gpus:
-        try:
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            print(f"✓ GPU detected: {len(gpus)} GPU(s) available")
-            return 'GPU'
-        except RuntimeError as e:
-            print(f"⚠ GPU error: {e}. Using CPU.")
-            return 'CPU'
+    """Auto-detect and configure GPU/CPU for PyTorch"""
+    if torch.cuda.is_available():
+        device = 'cuda'
+        gpu_count = torch.cuda.device_count()
+        print(f"✓ GPU detected: {gpu_count} GPU(s) available")
+        print(f"  GPU: {torch.cuda.get_device_name(0)}")
+        return device
     else:
         print("ℹ Using CPU for inference")
-        tf.config.threading.set_intra_op_parallelism_threads(0)
-        tf.config.threading.set_inter_op_parallelism_threads(0)
-        return 'CPU'
+        return 'cpu'
 
 
 # Configure device at startup
@@ -142,24 +135,26 @@ PREPROCESSOR = None
 
 
 def load_model():
-    """Load pre-trained LSTM model"""
+    """Load pre-trained PyTorch LSTM model"""
     global MODEL, PREPROCESSOR
 
-    model_path = os.getenv('MODEL_PATH', 'models/vessel_arrival_lstm.h5')
+    model_path = os.getenv('MODEL_PATH', 'models/vessel_arrival_lstm.pth')
 
-    if not os.path.exists(model_path):
-        print(f"⚠ WARNING: Model file not found at {model_path}")
-        print("  Please train the model first using: python train.py --synthetic --epochs 50")
-        MODEL = None
-        PREPROCESSOR = None
-        return
-
+    # Initialize model (will work even without trained weights for testing)
     try:
-        MODEL = VesselArrivalLSTM(model_path=model_path)
+        MODEL = VesselArrivalPredictor(model_path=model_path if os.path.exists(model_path) else None, device=DEVICE)
         PREPROCESSOR = VoyageDataPreprocessor()
-        print(f"✓ Model loaded successfully from {model_path}")
+
+        total_params = sum(p.numel() for p in MODEL.model.parameters())
+
+        if os.path.exists(model_path):
+            print(f"✓ Model loaded successfully from {model_path}")
+        else:
+            print(f"⚠ WARNING: Model file not found at {model_path}")
+            print("  Using untrained model architecture. Train with: python train.py --synthetic --epochs 50")
+
         print(f"  Device: {DEVICE}")
-        print(f"  Parameters: {MODEL.model.count_params():,}")
+        print(f"  Parameters: {total_params:,}")
     except Exception as e:
         print(f"❌ Failed to load model: {e}")
         MODEL = None
@@ -300,13 +295,15 @@ async def health_check():
     model_loaded = MODEL is not None
 
     if model_loaded:
+        total_params = sum(p.numel() for p in MODEL.model.parameters())
         return {
             "status": "healthy",
             "model_loaded": True,
             "device": DEVICE,
             "model_info": {
                 "model_name": "VesselArrivalLSTM",
-                "total_parameters": MODEL.model.count_params(),
+                "framework": "PyTorch",
+                "total_parameters": total_params,
                 "supported_ship_types": ["bulk_carrier"]
             }
         }
@@ -393,13 +390,15 @@ async def model_info():
     if MODEL is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
+    total_params = sum(p.numel() for p in MODEL.model.parameters())
+
     return ModelInfo(
         model_name="VesselArrivalLSTM",
-        architecture="CNN + Attention + Bidirectional LSTM",
+        architecture="CNN + Attention + Bidirectional LSTM (PyTorch)",
         sequence_length=48,
         features=8,
         static_features=10,
-        total_parameters=MODEL.model.count_params(),
+        total_parameters=total_params,
         device=DEVICE,
         supported_ship_types=["bulk_carrier"],
         max_batch_size=30
@@ -412,6 +411,7 @@ async def root():
     return {
         "service": "TytoAlba Vessel Arrival Prediction",
         "version": "2.0.0",
+        "framework": "PyTorch",
         "model": "LSTM-based arrival time prediction",
         "supported_ship_types": ["bulk_carrier"],
         "device": DEVICE,

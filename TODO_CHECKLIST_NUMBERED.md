@@ -1,355 +1,500 @@
 # TytoAlba Project - Numbered Task Checklist
 
-**Last Updated:** October 31, 2025
-**Total Tasks:** 35
+**Last Updated:** November 15, 2025
+**Total Tasks:** 23
+**Completed:** 9
 **In Progress:** 3
-**Pending:** 32
+**Pending:** 11
 
 ---
 
-## 📌 Master Checklist - All Tasks
+## 📌 Master Checklist - Make It Work First!
 
-### 🔴 PRIORITY 1 - Code Quality & Refactoring (Week 1-2)
+### 🔴 PRIORITY 1 - GET IT RUNNING (Due: Nov 14-15, 2025)
 
-#### ⚙️ Refactoring Tasks
-☐ 1. Refactor `remove_outliers` function from CC=10 to CC=3-4
-   - File: `ml-service/src/preprocessing/data_pipeline.py:164-209`
-   - Owner: Angga/Putri | Effort: 4h | Impact: HIGH
+#### 🚢 Dummy Data Creation - MOST CRITICAL!
 
-☐ 2. Extract parameter parsing in `GetShipHistory` (reduce CC from 7 to 5)
-   - File: `backend/internal/handlers/mqtt_ships.go:100-137`
-   - Owner: Angga | Effort: 2h | Impact: MEDIUM
+🔄 1. **Generate synthetic ship voyage data (30 ships × 30 days)** [IN PROGRESS]
+   - ✅ Historical voyages file exists: `historical_voyages_15min.json` (1.8MB, 5,331 records)
+   - ✅ Contains: 49 ships with positions, speed, course, timestamps
+   - ☐ Need: fuel consumption, engine RPM, cargo load
+   - ☐ Need: weather conditions (wind, waves, temperature)
+   - File: `backend/data/historical_voyages_15min.json` (exists)
+   - Owner: Angga | Effort: 3h remaining | Impact: **HIGH**
 
-☐ 3. Create middleware for CORS and error handling standardization
-   - File: `backend/internal/middleware/` (new)
-   - Owner: Angga | Effort: 3h | Impact: HIGH
+✅ 2. **Update ships_master.json with complete operational data** [COMPLETED Nov 15]
+   - ✅ Restored all 12 bulk carriers from backup
+   - ✅ Added: current_position (lat, lon, speed, course, heading, timestamp)
+   - ✅ Added: current_voyage (voyage_id, last_port, destination, ETA, cargo status, fuel_remaining)
+   - ✅ Added: destination coordinates for all Indonesian ports
+   - ✅ Added: realistic cargo weights and fuel levels
+   - File: `backend/data/ships_master.json`
+   - Owner: Angga | Status: **COMPLETED** ✅
 
-#### 🧪 Testing Tasks
-☐ 4. Add unit tests for `remove_outliers` (10+ test cases)
+🔄 3. **Modify backend ShipData struct to handle all new fields** [IN PROGRESS]
+   - ✅ Added: PositionData struct (latitude, longitude, speed, course, heading)
+   - ✅ Added: VoyageData struct (last_port, destination, ETA, status)
+   - ✅ Updated: ShipMaster struct with CurrentPosition and CurrentVoyage
+   - ☐ Need: Operational struct (engine_rpm, fuel_consumption)
+   - ☐ Need: Weather struct
+   - File: `backend/internal/handlers/ships.go`
+   - Owner: Angga | Effort: 2h remaining | Impact: **MEDIUM**
+
+✅ 4. **Update backend handlers to serve enhanced ship data** [COMPLETED Nov 15]
+   - ✅ Updated mergeShipData() to use CurrentPosition and CurrentVoyage
+   - ✅ Added enrichShipsWithHistoricalData() for historical trails
+   - ✅ Added generatePredictedRoutes() for route generation
+   - ✅ Added getPortCoordinates() for 13 Indonesian ports
+   - ✅ Ensure /api/ships returns all fields including routes and historical trails
+   - File: `backend/internal/handlers/ships.go`
+   - Owner: Angga | Status: **COMPLETED** ✅
+
+🔄 5. **Update frontend to display all ship data** [IN PROGRESS]
+   - ✅ Updated ship icon from pentagon SVG to PNG ship symbol (870107.png)
+   - ✅ Dashboard displays: historical trails (green), predicted routes (blue dashed)
+   - ✅ Ship markers show: position, voyage, destination, ETA, fuel
+   - ☐ Need: ShipDetails component to show operational data
+   - ☐ Need: Display voyage history, cargo info, weather in detail panel
+   - File: `frontend/src/views/Dashboard.vue` (updated), `frontend/src/components/ShipDetails.vue` (pending)
+   - Owner: Angga/Putri | Effort: 4h remaining | Impact: **HIGH**
+
+☐ 6. **Train ML models with synthetic data**
+   - Train ETA prediction model
+   - Train fuel consumption model
+   - Train anomaly detection model
+   - Save trained model files (.pth)
+   - Files: `ml-service/models/*.pth`
+   - Owner: Angga | Effort: 10h | Impact: **CRITICAL - ML WON'T PREDICT WITHOUT THIS**
+
+☐ 7. **Test end-to-end system with dummy data**
+   - Start all services (backend, ML, frontend)
+   - Verify ship tracking works
+   - Verify ML predictions work
+   - Verify data flows correctly
+   - Owner: Angga | Effort: 4h | Impact: **CRITICAL**
+
+---
+
+### 🟡 PRIORITY 2 - UNIT TESTING (Due: Nov 17, 2025)
+
+☐ 8. **Write unit tests for `remove_outliers` function (10+ test cases)**
+   - Test: normal data, edge cases, invalid inputs
    - File: `ml-service/tests/test_data_pipeline.py`
-   - Owner: Putri | Effort: 4h | Impact: HIGH
+   - Owner: Angga | Effort: 4h | Impact: **CRITICAL**
 
-☐ 5. Add unit tests for `GetShipHistory` (7+ test cases)
-   - File: `backend/internal/handlers/mqtt_ships_test.go`
-   - Owner: Angga | Effort: 3h | Impact: MEDIUM
+☐ 9. **Write unit tests for LSTM model components**
+   - Test: model forward pass, predictions, loading/saving
+   - File: `ml-service/tests/test_lstm_model.py`
+   - Owner: Angga | Effort: 5h | Impact: **HIGH**
 
-#### 🔄 CI/CD Integration
-☐ 6. Integrate gocyclo and radon into CI/CD pipeline
-   - File: `.github/workflows/code-quality.yml`
-   - Owner: Angga | Effort: 2h | Impact: MEDIUM
+☐ 10. **Write unit tests for ML API inference endpoints**
+   - Test: all endpoints, error handling, validation
+   - File: `ml-service/tests/test_api_inference.py`
+   - Owner: Angga | Effort: 4h | Impact: **HIGH**
 
----
+☐ 11. **Write unit tests for Go backend handlers**
+   - Test: mqtt_ships, ship_store, client handlers
+   - Files: `backend/internal/handlers/*_test.go`
+   - Owner: Angga | Effort: 6h | Impact: **MEDIUM**
 
-### 🟡 PRIORITY 2 - Core Development (Week 3-6)
+☐ 12. **Run all unit tests and generate coverage reports (HTML)**
+   - Generate: backend coverage, ML service coverage
+   - Owner: Angga | Effort: 2h | Impact: **CRITICAL**
 
-#### 🎨 Frontend Development (Vue.js 3)
-🔄 7. Complete Frontend development (Vue.js 3 + TypeScript + Tailwind) **[IN PROGRESS]**
-   - Files: `frontend/src/views/Dashboard.vue`, components
-   - Owner: Putri | Effort: 20h | Impact: CRITICAL
-
-☐ 8. Implement route visualization with Leaflet.js (solid/dotted lines)
-   - File: `frontend/src/components/RouteMap.vue`
-   - Owner: Putri | Effort: 8h | Impact: HIGH
-
-☐ 9. Integrate weather API for real-time weather overlay on map
-   - File: `frontend/src/components/WeatherOverlay.vue`
-   - Owner: Putri | Effort: 6h | Impact: MEDIUM
-
-#### 🤖 ML Service Development
-🔄 10. Complete ML Service integration with Backend API **[IN PROGRESS]**
-   - File: `ml-service/src/api_inference.py`
-   - Owner: Angga/Putri | Effort: 12h | Impact: CRITICAL
-
-🔄 11. Improve LSTM model accuracy from 92% to 95% target **[IN PROGRESS]**
-   - File: `ml-service/src/models/lstm_arrival_predictor.py`
-   - Owner: Putri | Effort: 30h | Impact: CRITICAL
-
-#### 💾 Database & Infrastructure
-☐ 12. Implement PostgreSQL database with TimescaleDB extension
-   - Files: `database/schema.sql`, `backend/internal/database/`
-   - Owner: Rina/Angga | Effort: 15h | Impact: HIGH
-
-☐ 13. Deploy MQTT infrastructure to production environment
-   - Files: Docker configs, mosquitto setup
-   - Owner: Angga | Effort: 6h | Impact: HIGH
+☐ 13. **Submit unit test code + documentation package**
+   - Package: all test files + coverage reports
+   - Owner: Angga | Effort: 2h | Impact: **CRITICAL**
 
 ---
 
-### 🟢 PRIORITY 3 - Testing & Quality Assurance (Week 7-8)
+### 🟢 PRIORITY 3 - TEST DOCUMENTATION (Due: Nov 24, 2025)
 
-☐ 14. Create comprehensive testing pyramid (Unit 60%, Integration 30%, E2E 10%)
-   - Files: Multiple test files across all services
-   - Owner: All | Effort: 25h | Impact: CRITICAL
+☐ 14. **Execute all 50+ test cases from test documentation plan**
+   - Execute: 10 backend + 15 ML + 15 integration + 10 E2E tests
+   - File: `docs/TEST_DOCUMENTATION.md`
+   - Owner: Angga | Effort: 8h | Impact: **CRITICAL**
 
-☐ 15. Write 50+ detailed test cases covering all test categories
-   - File: `docs/testing/test_cases.md`
-   - Owner: All | Effort: 12h | Impact: HIGH
+☐ 15. **Fill in test execution results for all test cases**
+   - Update with: actual results, pass/fail, evidence
+   - Owner: Angga | Effort: 4h | Impact: **CRITICAL**
 
-☐ 16. Set up performance testing (load, stress, ML inference latency)
-   - Files: `tests/performance/` with k6 scripts
-   - Owner: Angga | Effort: 8h | Impact: MEDIUM
+☐ 16. **Generate HTML coverage reports for all services**
+   - Generate: backend + ML service coverage
+   - Owner: Angga | Effort: 2h | Impact: **HIGH**
 
-☐ 17. Conduct User Acceptance Testing (UAT) with 2-week pilot
-   - Duration: 2 weeks (Dec 16-26, 2025)
-   - Owner: All | Effort: 40h | Impact: CRITICAL
+☐ 17. **Document any defects found during testing**
+   - Create defect log with severity, steps to reproduce
+   - Owner: Angga | Effort: 3h | Impact: **MEDIUM**
 
----
-
-### 📚 PRIORITY 4 - UAS Report Documentation (Week 9-10)
-
-#### 📄 UAS Report Enhancements
-☐ 18. Create Risk Management section with mitigation strategies
-   - File: `docs/UAS_Section_RiskManagement.md`
-   - Owner: Angga | Effort: 4h | Impact: HIGH
-
-☐ 19. Develop enhanced Stakeholder Analysis matrix with engagement strategy
-   - File: `docs/UAS_Section_Stakeholders.md`
-   - Owner: Rina | Effort: 3h | Impact: MEDIUM
-
-☐ 20. Document Project Governance Structure with RACI matrix
-   - File: `docs/UAS_Section_Governance.md`
-   - Owner: Angga | Effort: 3h | Impact: MEDIUM
-
-☐ 21. Create detailed LSTM Architecture documentation with hyperparameter tuning results
-   - File: `docs/UAS_Section_MLArchitecture.md`
-   - Owner: Putri | Effort: 6h | Impact: HIGH
-
-☐ 22. Document Data Pipeline with quality gates and validation rules
-   - File: `docs/UAS_Section_DataPipeline.md`
-   - Owner: Rina | Effort: 4h | Impact: MEDIUM
-
-☐ 23. Develop Change Management & User Adoption strategy
-   - File: `docs/UAS_Section_ChangeManagement.md`
-   - Owner: Angga | Effort: 3h | Impact: MEDIUM
-
-☐ 24. Create training materials and user manual for captains
-   - Files: `docs/user_manual/ShipCaptain.pdf`, `FleetManager.pdf`
-   - Owner: Putri | Effort: 12h | Impact: HIGH
-
-☐ 25. Define Post-Implementation Review Framework with success metrics
-   - File: `docs/UAS_Section_PostImplementation.md`
-   - Owner: All | Effort: 2h | Impact: MEDIUM
-
-☐ 26. Document Technical Debt backlog with prioritization
-   - File: `docs/UAS_Section_Maintenance.md`
-   - Owner: Angga | Effort: 3h | Impact: MEDIUM
-
-☐ 27. Create maintenance schedule and runbooks for common issues
-   - Files: `docs/operations/runbooks/`
-   - Owner: Angga | Effort: 6h | Impact: HIGH
-
-☐ 28. Write Academic Contribution section addressing research questions
-   - File: `docs/UAS_Section_AcademicContribution.md`
-   - Owner: Putri | Effort: 8h | Impact: CRITICAL
-
-☐ 29. Prepare comparative analysis (LSTM vs Random Forest vs Linear Regression)
-   - File: `ml-service/experiments/model_comparison.py`
-   - Owner: Putri | Effort: 10h | Impact: HIGH
-
-#### 🛠️ Technical Documentation
-☐ 30. Generate API documentation using OpenAPI/Swagger
-   - File: `docs/api/openapi.yaml`
-   - Owner: Angga | Effort: 4h | Impact: HIGH
-
-☐ 31. Create Docker Compose and Kubernetes deployment manifests
-   - Files: `docker-compose.yml`, `k8s/`
-   - Owner: Angga | Effort: 6h | Impact: CRITICAL
-
-☐ 32. Implement monitoring dashboard for system health and model performance
-   - Files: Grafana dashboards, Prometheus configs
-   - Owner: Angga | Effort: 8h | Impact: HIGH
-
-☐ 33. Set up automated model retraining pipeline
-   - File: `ml-service/training/auto_retrain.py`
-   - Owner: Putri | Effort: 10h | Impact: MEDIUM
-
-☐ 34. Conduct security testing (OWASP Top 10, penetration testing)
-   - Owner: Angga | Effort: 8h | Impact: HIGH
-
-#### 📑 Appendices
-☐ 35. Create all UAS appendices (A-J) including Sprint Retrospectives, ERD, etc.
-   - Files: `docs/appendices/Appendix_A.md` through `Appendix_J.md`
-   - Owner: All | Effort: 20h | Impact: CRITICAL
+☐ 18. **Submit complete test documentation package**
+   - Submit: test cases, execution results, coverage, defect log
+   - Owner: Angga | Effort: 2h | Impact: **CRITICAL**
 
 ---
 
-## 📊 Task Summary by Category
+### 📚 PRIORITY 4 - FUTURE ENHANCEMENTS
+
+#### ⚙️ Code Quality
+
+☐ 19. **Refactor `remove_outliers` function (reduce CC from 10 to 3-4)**
+   - File: `ml-service/src/preprocessing/data_pipeline.py:164-209`
+   - Owner: Angga | Effort: 4h | Impact: **MEDIUM**
+
+☐ 20. **Create middleware for CORS and error handling**
+   - File: `backend/internal/middleware/` (new)
+   - Owner: Angga | Effort: 3h | Impact: **MEDIUM**
+
+#### 📚 Documentation
+
+☐ 21. **Create LSTM Architecture documentation**
+   - Document PyTorch model architecture, hyperparameters
+   - File: `docs/ML_ARCHITECTURE.md`
+   - Owner: Angga | Effort: 6h | Impact: **HIGH**
+
+☐ 22. **Document data pipeline with validation rules**
+   - File: `docs/DATA_PIPELINE.md`
+   - Owner: Angga | Effort: 4h | Impact: **MEDIUM**
+
+☐ 23. **Create user manual for ship monitoring dashboard**
+   - File: `docs/USER_MANUAL.md`
+   - Owner: Putri | Effort: 8h | Impact: **MEDIUM**
+
+---
+
+## ✅ COMPLETED TASKS
+
+~~**Task #2:** Update ships_master.json with complete operational data~~ ✅ **COMPLETED Nov 15**
+   - Restored all 12 bulk carriers from backup (was 3, now 12)
+   - Added current_position for all ships (lat, lon, speed, course, heading, timestamp)
+   - Added current_voyage for all ships (voyage_id, ports, destination, ETA, cargo, fuel)
+   - Added realistic voyage data for 12 Indonesian routes
+   - File: `backend/data/ships_master.json`
+
+~~**Task #4:** Update backend handlers to serve enhanced ship data~~ ✅ **COMPLETED Nov 15**
+   - Updated mergeShipData() to use CurrentPosition and CurrentVoyage structs
+   - Added enrichShipsWithHistoricalData() for 5,331 historical position records
+   - Added generatePredictedRoutes() for automatic route generation
+   - Added getPortCoordinates() for 13 Indonesian ports
+   - Backend now serves: positions, routes, historical trails, destinations
+   - File: `backend/internal/handlers/ships.go`
+
+~~**Task #26:** ML Service PyTorch Conversion~~ ✅ **COMPLETED Nov 13**
+   - All 4 models converted to PyTorch (ETA, Fuel, Anomaly, Route)
+   - Dependencies installed: torch, pandas, scikit-learn, etc.
+   - All models import successfully
+   - ML Service API running on port 5000
+
+~~**Task #27:** Frontend Development (Vue 3 + TypeScript + Tailwind)~~ ✅ **COMPLETED**
+   - Dashboard with real-time ship tracking
+   - Leaflet.js map integration
+   - Ship details panel
+   - Real-time MQTT data updates
+
+~~**Task #28:** Windy.com Weather Overlay Integration~~ ✅ **COMPLETED Nov 13**
+   - Windy API integration with fallback to OpenStreetMap
+   - Weather layer controls (Wind, Waves, Temperature)
+   - Graceful degradation when Windy unavailable
+
+~~**Task #29:** Backend Go API Development~~ ✅ **COMPLETED**
+   - Ship data handlers
+   - MQTT integration for real-time updates
+   - WebSocket support for frontend
+   - CORS middleware
+
+~~**Task #30:** MQTT Infrastructure Setup~~ ✅ **COMPLETED**
+   - Mosquitto broker running
+   - Ship position publishing
+   - Backend subscribing to topics
+
+~~**Task #31:** Unit Testing Plan Created~~ ✅ **COMPLETED Nov 7**
+   - File: `docs/UNIT_TESTING_PLAN.md`
+   - 30+ planned test cases across all services
+
+~~**Task #32:** Test Documentation Plan Created~~ ✅ **COMPLETED Nov 7**
+   - File: `docs/TEST_DOCUMENTATION.md`
+   - 50+ documented test cases (10 backend + 15 ML + 15 integration + 10 E2E)
+
+~~**Frontend Ship Icon Update**~~ ✅ **COMPLETED Nov 15**
+   - Changed ship marker from pentagon SVG to proper PNG ship icon (870107.png)
+   - Updated Dashboard.vue to use L.icon() with image URL
+   - File: `frontend/src/views/Dashboard.vue`
+
+---
+
+## 📊 Task Summary
 
 ### By Priority
-- 🔴 **Priority 1 (Code Quality):** Tasks #1-6 (6 tasks)
-- 🟡 **Priority 2 (Development):** Tasks #7-13 (7 tasks)
-- 🟢 **Priority 3 (Testing):** Tasks #14-17 (4 tasks)
-- 📚 **Priority 4 (Documentation):** Tasks #18-35 (18 tasks)
+- 🔴 **Priority 1 (GET IT RUNNING - Due Nov 14-15):** Tasks #1-7 (2 completed, 3 in progress, 2 pending)
+- 🟡 **Priority 2 (UNIT TESTING - Due Nov 17):** Tasks #8-13 (6 pending) **← NEXT FOCUS**
+- 🟢 **Priority 3 (TEST DOCS - Due Nov 24):** Tasks #14-18 (5 pending)
+- 📚 **Priority 4 (FUTURE):** Tasks #19-23 (5 pending)
+- ✅ **Completed:** 9 major tasks
 
 ### By Status
-- ⏳ **Pending:** 31 tasks
-- 🔄 **In Progress:** 3 tasks (#7, #10, #11)
-- ✅ **Completed:** 0 tasks
+- ⏳ **Pending:** 11 tasks
+- 🔄 **In Progress:** 3 tasks (#1, #3, #5)
+- ✅ **Completed:** 9 tasks (including #2, #4)
 
-### By Owner
-- **Angga (Backend/DevOps):** Tasks #2, #3, #5, #6, #10, #12, #13, #16, #18, #20, #23, #26, #27, #30, #31, #32, #34
-- **Putri (Frontend/ML):** Tasks #1, #4, #7, #8, #9, #11, #21, #24, #28, #29, #33
-- **Rina (Database/Data):** Tasks #12, #19, #22
-- **All Team:** Tasks #10, #14, #15, #17, #25, #35
+### By Critical Path
+**BLOCKER TASKS** (Nothing works without these):
+- Task #1: Generate synthetic voyage data (ML needs this to train)
+- Task #2: Update ships_master.json (Backend needs this to serve data)
+- Task #6: Train ML models (Can't make predictions without trained models)
+- Task #7: Test end-to-end (Verify everything works)
 
-### By Effort (Estimated Hours)
-- 🔥 **High Effort (>10 hours):** Tasks #7, #10, #11, #12, #14, #15, #17, #24, #35
-- ⚡ **Medium Effort (5-10 hours):** Tasks #8, #9, #16, #21, #27, #29, #31, #32, #33, #34
-- ✅ **Low Effort (<5 hours):** Tasks #1, #2, #3, #4, #5, #6, #18, #19, #20, #22, #23, #25, #26, #30
-
-### By Impact
-- 🔥 **Critical Impact:** Tasks #7, #10, #11, #14, #17, #28, #31, #35
-- ⭐ **High Impact:** Tasks #1, #3, #4, #8, #12, #13, #15, #18, #21, #24, #27, #30, #32, #34
-- ✨ **Medium Impact:** Tasks #2, #5, #6, #9, #16, #19, #20, #22, #23, #25, #26, #29, #33
+### By Deadline
+- **Nov 14-15 (Today/Tomorrow):** Tasks #1-7 (Data + System Integration) - **URGENT! 🔥**
+- **Nov 17 (Sunday):** Tasks #8-13 (Unit Tests) - **2 DAYS**
+- **Nov 24 (Sunday):** Tasks #14-18 (Test Documentation) - **9 DAYS**
+- **Future:** Tasks #19-23 (Enhancements & Documentation)
 
 ---
 
-## 🎯 Recommended Task Sequence
+## 🎯 REVISED Work Plan - Data First!
 
-### This Week (Nov 1-7, 2025)
-**Focus:** Code Quality & Critical Development
+### **TODAY - Nov 13, 2025 (TONIGHT)**
 
-**Day 1-2:**
-- [ ] Task #1: Refactor `remove_outliers` (4h)
-- [ ] Task #2: Extract parameter parsing (2h)
-- [ ] Task #3: Create middleware (3h)
+**CRITICAL PATH - GET DATA FIRST:**
+- [ ] Task #1: Generate synthetic voyage data script (6h) **← START THIS NOW!**
+  - Create Python script to generate 30 ships × 30 days data
+  - Include positions, speed, fuel, weather, cargo
+  - Save as CSV for ML training
 
-**Day 3-4:**
-- [ ] Task #4: Unit tests for `remove_outliers` (4h)
-- [ ] Task #5: Unit tests for `GetShipHistory` (3h)
-- [ ] Task #6: CI/CD integration (2h)
-
-**Day 5-7:**
-- [ ] Task #7: Continue frontend development (10h this week)
-- [ ] Task #11: LSTM model improvement (10h this week)
-
-**Total Effort This Week:** ~38 hours
+**Total:** ~6 hours (work tonight!)
 
 ---
 
-### Next Week (Nov 8-14, 2025)
-**Focus:** Complete Core Features
+### **Nov 14, 2025 (Thursday - TOMORROW)**
 
-- [ ] Task #7: Finish frontend dashboard (10h)
-- [ ] Task #8: Route visualization (8h)
-- [ ] Task #9: Weather API integration (6h)
-- [ ] Task #10: ML Service API completion (10h)
-- [ ] Task #11: LSTM model tuning continues (10h)
+**MORNING:**
+- [ ] Task #2: Update ships_master.json (4h morning)
+  - Add all operational data for 30 ships
+  - Add voyage history for each ship
 
-**Total Effort:** ~44 hours
+**AFTERNOON:**
+- [ ] Task #3: Modify backend ShipData struct (4h afternoon)
+  - Add new structs for operational, cargo, weather, voyage data
 
----
-
-### Week 3-4 (Nov 15-28, 2025)
-**Focus:** Database & Infrastructure
-
-- [ ] Task #12: PostgreSQL + TimescaleDB (15h)
-- [ ] Task #13: MQTT production deployment (6h)
-- [ ] Task #30: API documentation (4h)
-- [ ] Task #31: Docker/K8s configs (6h)
-- [ ] Continue Task #11: Final model tuning (10h)
-
-**Total Effort:** ~41 hours
+**Total:** ~8 hours
 
 ---
 
-### Week 5-6 (Nov 29 - Dec 12, 2025)
-**Focus:** Testing Preparation
+### **Nov 15, 2025 (Friday - TODAY)**
 
-- [ ] Task #14: Testing pyramid implementation (25h)
-- [ ] Task #15: Write test cases (12h)
-- [ ] Task #16: Performance testing setup (8h)
-- [ ] Task #32: Monitoring dashboard (8h)
+**COMPLETED TODAY:**
+- [✅] Task #2: Updated ships_master.json with all 12 bulk carriers
+- [✅] Task #4: Updated backend handlers with route generation
 
-**Total Effort:** ~53 hours
+**REMAINING TODAY:**
+- [ ] Task #6: Train ML models with historical data (4h)
+- [ ] Task #7: Test end-to-end system (2h)
 
----
-
-### Week 7-8 (Dec 13-26, 2025)
-**Focus:** UAT & Testing
-
-- [ ] Task #17: User Acceptance Testing (40h over 2 weeks)
-- [ ] Task #34: Security testing (8h)
-- Execute all tests from Task #14-15
-
-**Total Effort:** ~48 hours
+**Total Remaining:** ~6 hours
 
 ---
 
-### Week 9-10 (Dec 27 - Jan 9, 2026)
-**Focus:** UAS Documentation
+### **Nov 16-17, 2025 (Weekend - UNIT TESTING DEADLINE)**
 
-**Documentation Tasks:**
-- [ ] Task #18: Risk Management (4h)
-- [ ] Task #19: Stakeholder Analysis (3h)
-- [ ] Task #20: Governance Structure (3h)
-- [ ] Task #21: LSTM Architecture (6h)
-- [ ] Task #22: Data Pipeline (4h)
-- [ ] Task #23: Change Management (3h)
-- [ ] Task #24: User manuals (12h)
-- [ ] Task #25: Post-Implementation Review (2h)
-- [ ] Task #26: Technical Debt (3h)
-- [ ] Task #27: Maintenance runbooks (6h)
-- [ ] Task #28: Academic Contribution (8h)
-- [ ] Task #29: Comparative analysis (10h)
-- [ ] Task #35: All appendices (20h)
+**Saturday (Nov 16):**
+- [ ] Task #8: Unit tests for remove_outliers (4h)
+- [ ] Task #9: Unit tests for LSTM model (5h)
+- [ ] Task #10: Unit tests for ML API (4h)
 
-**Total Effort:** ~84 hours
+**Sunday (Nov 17 - DEADLINE DAY):**
+- [ ] Task #11: Unit tests for Go backend (6h)
+- [ ] Task #12: Run tests + coverage reports (2h)
+- [ ] Task #13: Submit unit test package (2h)
+- [ ] **SUBMIT BEFORE 19:00!**
 
 ---
 
-### Week 11 (Jan 10-16, 2026)
-**Focus:** Deployment
+### **Nov 21-24, 2025 (Test Documentation Week)**
 
-- Deployment activities (not in numbered list - part of final phase)
-- System handover
-- Hypercare support
-
----
-
-### Week 12 (Jan 17-23, 2026)
-**Focus:** Final Submission
-
-- Compile final UAS report
-- Create presentation
-- Final submission
+**Focus:** Test Documentation
+- [ ] Task #14: Execute all 50+ test cases (8h)
+- [ ] Task #15: Fill in test results (4h)
+- [ ] Task #16: Generate coverage reports (2h)
+- [ ] Task #17: Document defects (3h)
+- [ ] Task #18: Submit test documentation (2h)
 
 ---
 
-## 🚀 Quick Start Guide
+## 💡 Quick Commands
 
-### Want to Start Now?
+### Generate Synthetic Data
+```bash
+cd ml-service
+source venv/bin/activate
+python data/generate_synthetic_data.py --ships 30 --days 30
+```
 
-**Option 1: High Impact, Quick Wins**
-Start with: Tasks #1, #2, #3 (Code quality improvements, ~9 hours total)
+### Train ML Models
+```bash
+cd ml-service
+source venv/bin/activate
+python train.py --data data/synthetic_voyage_data.csv --epochs 50
+```
 
-**Option 2: Critical Path First**
-Start with: Tasks #7, #10, #11 (Already in progress, keep momentum)
+### Run Unit Tests
+```bash
+# Python ML Service
+cd ml-service
+source venv/bin/activate
+pytest tests/ -v --cov=src --cov-report=html
 
-**Option 3: Complete One Category**
-Start with: Tasks #1-6 (Finish all code quality tasks, ~18 hours total)
+# Go Backend
+cd backend
+go test ./... -v -cover -coverprofile=coverage.out
+go tool cover -html=coverage.out -o coverage.html
+```
 
-**Option 4: Documentation Sprint**
-Start with: Tasks #18-29 (UAS documentation, can work in parallel)
+### Start All Services
+```bash
+# From TytoAlba root
+./start_all.sh
+
+# Check logs
+tail -f logs/backend.log
+tail -f logs/ml-service.log
+tail -f logs/frontend.log
+```
 
 ---
 
-## 💬 How to Select Tasks
+## 📝 Critical Path Explanation
 
-Just tell me:
-- **Single task:** "Let's do task #1"
-- **Multiple tasks:** "I want to work on tasks #1, #2, and #3"
-- **By category:** "Let's tackle all Priority 1 tasks"
-- **By owner:** "Show me all tasks for Putri"
-- **By time:** "What can I finish in 4 hours?"
+### **Why Dummy Data is Priority #1:**
 
-I'll help you with:
-- Detailed implementation steps
-- Code examples
-- Testing strategies
-- Documentation templates
-- Progress tracking
+**Current Problem:**
+- ❌ ML models exist but are **UNTRAINED** (no model files)
+- ❌ Ships have basic data but missing **operational details**
+- ❌ No **historical voyage data** for ML training
+- ❌ System looks nice but **doesn't actually work** end-to-end
+
+**What We Need:**
+
+1. **Synthetic Voyage Data** (Task #1)
+   - 30 ships × 30 days = 900 days of data
+   - Each day: positions every hour (24 points/day)
+   - Total: ~21,600 data points
+   - Used to train ML models
+
+2. **Complete Ship Master Data** (Task #2)
+   - Current speed, course, fuel level
+   - Engine RPM, cargo details
+   - Voyage history (last 5 trips)
+   - Weather conditions
+
+3. **Trained ML Models** (Task #6)
+   - Load synthetic data
+   - Train LSTM models
+   - Save .pth model files
+   - Now ML can make predictions!
+
+**After This:**
+- ✅ Backend serves complete ship data
+- ✅ ML makes real predictions
+- ✅ Frontend displays everything
+- ✅ System actually works!
+- ✅ Ready for demo and testing
 
 ---
 
-**Ready to start? Just pick your task number(s)!** 🎯
+## 🚨 URGENT ACTION PLAN
+
+### **START NOW (TONIGHT):**
+
+**Task #1: Create synthetic data generator**
+
+Location: `ml-service/data/generate_synthetic_data.py`
+
+This script will generate:
+```python
+# Output: synthetic_voyage_data.csv
+# Columns:
+# - ship_mmsi, timestamp, latitude, longitude
+# - speed_knots, heading, draught
+# - fuel_level, fuel_consumption, engine_rpm
+# - cargo_weight, cargo_type
+# - wind_speed, wave_height, temperature
+# - destination_lat, destination_lon
+# - actual_arrival_time (for training)
+```
+
+**Why this is critical:**
+- Without this data, ML models cannot be trained
+- Without trained models, predictions don't work
+- Without predictions, the system is just a ship tracker
+- THIS IS THE FOUNDATION OF EVERYTHING!
+
+---
+
+**🔥 READY TO START? Let's create the synthetic data generator NOW!**
+
+Would you like me to:
+1. Create the synthetic data generation script (Task #1)?
+2. Or update ships_master.json with operational data (Task #2)?
+3. Or both in parallel?
+
+---
+
+## 📅 SESSION LOG - November 15, 2025
+
+### ✅ Completed Today (Phase 1 & 2)
+
+**Session Goals:** Fix data inconsistencies from unexpected logout, restore 12 bulk carriers
+
+**Achievements:**
+
+1. **Data Investigation & Documentation** ✅
+   - Analyzed all markdown files for inconsistencies
+   - Identified missing 9 bulk carriers (only 3 remained in ships_master.json)
+   - Found historical_voyages_15min.json exists (1.8MB, 5,331 records, 49 ships)
+   - Documented port coordinates for 13 Indonesian ports
+
+2. **Backend Data Restoration** ✅ (Task #2 COMPLETED)
+   - Restored all 12 bulk carriers from ships_master_backup.json
+   - Added current_position with realistic coordinates in Indonesian waters
+   - Added current_voyage with voyage_id, ports, destinations, ETAs
+   - Added cargo_weight, cargo_status, fuel_remaining for all ships
+   - Ships now distributed across: TARAHAN, SURALAYA, PAITON, JEPARA, SURABAYA, BALIKPAPAN, etc.
+
+3. **Backend Handler Enhancements** ✅ (Task #4 COMPLETED)
+   - Updated `mergeShipData()` to use CurrentPosition and CurrentVoyage structs
+   - Implemented `enrichShipsWithHistoricalData()` - loads 5,331 historical records
+   - Implemented `generatePredictedRoutes()` - auto-generates predicted routes
+   - Implemented `getPortCoordinates()` - maps 13 Indonesian ports to coordinates
+   - Implemented `generateSimpleRoute()` - creates waypoint arrays for routes
+   - Backend now returns: ship positions, routes[], historicalTrail[], destinations
+
+4. **Frontend Improvements** ✅ (Task #5 Partially)
+   - Changed ship marker icon from pentagon SVG to PNG ship symbol (870107.png)
+   - Updated Dashboard.vue shipIcon() to use L.icon() with proper image URL
+   - Map now displays:
+     - Historical trails (solid green lines) from past AIS positions
+     - Predicted routes (dashed blue lines) to destinations
+     - Ship markers with full voyage information in popups
+
+**Files Modified:**
+- `/backend/data/ships_master.json` (restored 12 carriers with complete data)
+- `/backend/internal/handlers/ships.go` (added 5 new functions, 120+ lines)
+- `/frontend/src/views/Dashboard.vue` (updated ship icon)
+- `/TODO_CHECKLIST_NUMBERED.md` (this file - progress update)
+
+**Task Status Updates:**
+- Task #1: 🔄 IN PROGRESS (historical data exists, need fuel/engine/weather)
+- Task #2: ✅ COMPLETED (all 12 bulk carriers restored with operational data)
+- Task #3: 🔄 IN PROGRESS (structs added, need Operational and Weather)
+- Task #4: ✅ COMPLETED (handlers updated, routes generated)
+- Task #5: 🔄 IN PROGRESS (icon updated, need ShipDetails component)
+
+**Next Steps:**
+- Task #6: Train ML models with existing historical data
+- Task #7: Test end-to-end system (backend + ML + frontend)
+- Task #8-13: Unit Testing - Due Nov 17
+
+---
+
+**Session Duration:** ~2 hours
+**Impact:** CRITICAL - System now has complete ship data for 12 vessels
+**Status:** Phase 1 & 2 of project recovery COMPLETED ✅
